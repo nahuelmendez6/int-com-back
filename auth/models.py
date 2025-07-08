@@ -24,22 +24,76 @@ class UserManager(BaseUserManager):
 class User(AbstractUser):
 
     id_user = models.AutoField(primary_key=True)
-    email = models.EmailField(unique=True)
     name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
+    email = models.EmailField(max_length=100, unique=True)
+    password = models.CharField(max_length=255)
     enabled = models.BooleanField(default=True)
+    date_create = models.DateTimeField(auto_now_add=False, auto_now=False, null=True, blank=True)
+    date_update = models.DateTimeField(auto_now_add=False, auto_now=False, null=True, blank=True)
+
 
     username = None # Eliminamos el campo username del modelo original
 
-    USERNAME_FIELD = 'email'  # Campo que se usará para hacer login
-    REQUIRED_FIELDS = [] # Campos requeridos al crear superusuario
-
+    # Campos requeridos por Django Admin
+    is_staff = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
 
     objects = UserManager() # Manager personalizado
 
+    USERNAME_FIELD = 'email'  # Campo que se usará para hacer login
+    REQUIRED_FIELDS = []  # Campos requeridos al crear superusuario
+
     class Meta:
-        db_table = 'user' # Apunta a la tabla ya existente
+        db_table = 'n_user' # Apunta a la tabla ya existente
         managed = False  # Django no gestionará migraciones sobre esta tabla
 
     def __str__(self):
         return self.email
+
+
+class Customer(models.Model):
+
+    id_customer = models.AutoField(primary_key=True)
+    user = models.OneToOneField(
+        'NUser', on_delete=models.CASCADE, db_column='user_id', related_name='customer'
+    )
+    dni = models.CharField(max_length=20, null=True, blank=True)
+    phone = models.CharField(max_length=20, null=True, blank=True)
+    address = models.ForeignKey(
+        'NAddress', on_delete=models.SET_NULL, null=True, db_column='address_id', related_name='customer_addresses'
+    )
+
+    class Meta:
+        db_table = 'n_customer'
+        managed = False
+
+    def __str__(self):
+        return f"Cliente: {self.user.email}"
+
+
+class Provider(models.Model):
+    id_provider = models.AutoField(primary_key=True)
+    user = models.OneToOneField(
+        'User', on_delete=models.CASCADE, db_column='user_id', related_name='provider'
+    )
+    category = models.ForeignKey(
+        'Category', on_delete=models.SET_NULL, null=True, db_column='id_category', related_name='providers'
+    )
+    type_provider = models.ForeignKey(
+        'TypeProvider', on_delete=models.SET_NULL, null=True, db_column='id_type_provider', related_name='providers'
+    )
+    profession = models.ForeignKey(
+        'Profession', on_delete=models.SET_NULL, null=True, db_column='id_profession', related_name='providers'
+    )
+    address = models.ForeignKey(
+        'Address', on_delete=models.SET_NULL, null=True, db_column='address_id', related_name='provider_addresses'
+    )
+    description = models.TextField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'n_provider'
+        managed = False
+
+    def __str__(self):
+        return f"Proveedor: {self.user.email}"
