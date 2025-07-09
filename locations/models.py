@@ -6,3 +6,8 @@ class Address(models.Model):
     class Meta:
         db_table = 'n_address'
         managed = False
+
+
+class Zone(models.Model):
+    id_zone = models.AutoField(primary_key=True)
+
