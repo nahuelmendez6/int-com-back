@@ -11,3 +11,6 @@ class Address(models.Model):
 class Zone(models.Model):
     id_zone = models.AutoField(primary_key=True)
 
+    class Meta:
+        managed = False
+

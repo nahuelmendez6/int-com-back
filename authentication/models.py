@@ -56,12 +56,12 @@ class Customer(models.Model):
 
     id_customer = models.AutoField(primary_key=True)
     user = models.OneToOneField(
-        'NUser', on_delete=models.CASCADE, db_column='user_id', related_name='customer'
+        'User', on_delete=models.CASCADE, db_column='user_id', related_name='customer'
     )
     dni = models.CharField(max_length=20, null=True, blank=True)
     phone = models.CharField(max_length=20, null=True, blank=True)
     address = models.ForeignKey(
-        'NAddress', on_delete=models.SET_NULL, null=True, db_column='address_id', related_name='customer_addresses'
+        'locations.Address', on_delete=models.SET_NULL, null=True, db_column='address_id', related_name='customer_addresses'
     )
 
     class Meta:
@@ -78,16 +78,16 @@ class Provider(models.Model):
         'User', on_delete=models.CASCADE, db_column='user_id', related_name='provider'
     )
     category = models.ForeignKey(
-        'Category', on_delete=models.SET_NULL, null=True, db_column='id_category', related_name='providers'
+        'profiles.Category', on_delete=models.SET_NULL, null=True, db_column='id_category', related_name='providers'
     )
     type_provider = models.ForeignKey(
-        'TypeProvider', on_delete=models.SET_NULL, null=True, db_column='id_type_provider', related_name='providers'
+        'profiles.TypeProvider', on_delete=models.SET_NULL, null=True, db_column='id_type_provider', related_name='providers'
     )
     profession = models.ForeignKey(
-        'Profession', on_delete=models.SET_NULL, null=True, db_column='id_profession', related_name='providers'
+        'profiles.Profession', on_delete=models.SET_NULL, null=True, db_column='id_profession', related_name='providers'
     )
     address = models.ForeignKey(
-        'Address', on_delete=models.SET_NULL, null=True, db_column='address_id', related_name='provider_addresses'
+        'locations.Address', on_delete=models.SET_NULL, null=True, db_column='address_id', related_name='provider_addresses'
     )
     description = models.TextField(null=True, blank=True)
 

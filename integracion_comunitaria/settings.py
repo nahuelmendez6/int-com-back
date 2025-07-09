@@ -44,7 +44,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
 
-    'auth'
+    'authentication',
+    'locations',
+    'profiles',
 
 ]
 
@@ -142,4 +144,4 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-AUTH_USER_MODEL = 'auth.User' # la entidad User de la app auth es la que maneja la autenticacion de usuario
+AUTH_USER_MODEL = 'authentication.User' # la entidad User de la app auth es la que maneja la autenticacion de usuario

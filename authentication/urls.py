@@ -3,6 +3,6 @@
 from django.urls import path
 from .views import RegisterUserAPIView
 
-urrlpatterns = [
+urlpatterns = [
     path('register-user/', RegisterUserAPIView.as_view(), name='register')
 ]
