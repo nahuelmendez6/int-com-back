@@ -25,7 +25,7 @@ class User(AbstractUser):
 
     id_user = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50)
-    last_name = models.CharField(max_length=50)
+    lastname = models.CharField(max_length=50)
     email = models.EmailField(max_length=100, unique=True)
     password = models.CharField(max_length=255)
     enabled = models.BooleanField(default=True)
@@ -34,6 +34,8 @@ class User(AbstractUser):
 
 
     username = None # Eliminamos el campo username del modelo original
+    first_name = None
+    last_name = None
 
     # Campos requeridos por Django Admin
     is_staff = models.BooleanField(default=False)
