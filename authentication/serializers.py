@@ -40,7 +40,7 @@ class RegisterSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError(f'{field} es obligatorio')
 
         elif role == 'provider':
-            required_fields = ['category', 'type_provider', 'profession', 'address']
+            required_fields = ['email', 'password', 'name', 'lastname']
             for field in required_fields:
                 if not data.get(field):
                     raise serializers.ValidationError(f'{field} es obligatorio')
@@ -69,10 +69,10 @@ class RegisterSerializer(serializers.ModelSerializer):
         elif role == 'provider':
             Provider.objects.create(
                 user=user,
-                category=validated_data.get("category"),
-                type_provider=validated_data.get("type_provider"),
-                profession=validated_data.get("profession"),
-                address=validated_data.get("address"),
+                #category=validated_data.get("category"),
+                #type_provider=validated_data.get("type_provider"),
+                #profession=validated_data.get("profession"),
+                #address=validated_data.get("address"),
                 description=validated_data.get("description", "")
             )
         return user
