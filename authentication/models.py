@@ -94,6 +94,13 @@ class Provider(models.Model):
     )
     description = models.TextField(null=True, blank=True)
 
+    # para que el proveedor pueda acceder directamente a sus ciudades
+    cities = models.ManyToManyFiel(
+        'City',
+        through='ProviderCity',
+        related_name='providers'
+    )
+
     class Meta:
         db_table = 'n_provider'
         managed = False
