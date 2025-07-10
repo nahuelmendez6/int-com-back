@@ -63,7 +63,8 @@ class Customer(models.Model):
     dni = models.CharField(max_length=20, null=True, blank=True)
     phone = models.CharField(max_length=20, null=True, blank=True)
     address = models.ForeignKey(
-        'locations.Address', on_delete=models.SET_NULL, null=True, db_column='address_id', related_name='customer_addresses'
+        'locations.Address', on_delete=models.SET_NULL, null=True, db_column='address_id',
+        related_name='customer_addresses'
     )
 
     class Meta:
