@@ -79,8 +79,8 @@ class Provider(models.Model):
     user = models.OneToOneField(
         'User', on_delete=models.CASCADE, db_column='user_id', related_name='provider'
     )
-    category = models.ForeignKey(
-        'profiles.Category', on_delete=models.SET_NULL, null=True, db_column='id_category', related_name='providers'
+    categories = models.ManyToManyField(
+        'profiles.Category', through='ProviderCategory', related_name='providers'
     )
     type_provider = models.ForeignKey(
         'profiles.TypeProvider', on_delete=models.SET_NULL, null=True, db_column='id_type_provider', related_name='providers'
@@ -99,3 +99,13 @@ class Provider(models.Model):
 
     def __str__(self):
         return f"Proveedor: {self.user.email}"
+
+
+class ProviderCategory(models.Model):
+    provider = models.ForeignKey('Provider', on_delete=models.CASCADE, db_column='provider_id')
+    category = models.ForeignKey('profiles.Category', on_delete=models.CASCADE, db_column='category_id')
+
+    class Meta:
+        db_table = 'n_provider_category'
+        managed = False
+        unique_together = (('provider', 'category'),)

@@ -19,14 +19,14 @@ class RegisterSerializer(serializers.ModelSerializer):
     address = serializers.PrimaryKeyRelatedField(queryset=Address.objects.all(), required=False)
 
     # Datos opcionales de proveedor
-    category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), required=False)
+    categories = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), required=False, many=True)
     type_provider = serializers.PrimaryKeyRelatedField(queryset=TypeProvider.objects.all(), required=False)
     profession = serializers.PrimaryKeyRelatedField(queryset=Profession.objects.all(), required=False)
     description = serializers.CharField(required=False)
 
     class Meta:
         model = User
-        fields = ['email', 'password', 'name', 'lastname', 'role', 'dni', 'phone', 'address', 'category',
+        fields = ['email', 'password', 'name', 'lastname', 'role', 'dni', 'phone', 'address', 'categories',
                   'type_provider', 'profession', 'description']
 
     def validate(self, data):
@@ -56,6 +56,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         email = validated_data.pop('email')
         name = validated_data.pop('name')
         lastname = validated_data.pop('lastname')
+        categories_data = validated_data.pop('categories', [])
 
         user = User.objects.create_user(email=email, password=password, name=name, lastname=lastname)
 
@@ -67,12 +68,13 @@ class RegisterSerializer(serializers.ModelSerializer):
                 address=validated_data.get('address')
             )
         elif role == 'provider':
-            Provider.objects.create(
+            provider = Provider.objects.create(
                 user=user,
-                #category=validated_data.get("category"),
-                #type_provider=validated_data.get("type_provider"),
-                #profession=validated_data.get("profession"),
-                #address=validated_data.get("address"),
+                type_provider=validated_data.get("type_provider"),
+                profession=validated_data.get("profession"),
+                address=validated_data.get("address"),
                 description=validated_data.get("description", "")
             )
+            if categories_data:
+                provider.categories.set(categories_data)
         return user
