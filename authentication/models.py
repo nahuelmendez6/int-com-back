@@ -27,7 +27,7 @@ class User(AbstractUser):
     name = models.CharField(max_length=50)
     lastname = models.CharField(max_length=50)
     email = models.EmailField(max_length=100, unique=True)
-    password = models.CharField(max_length=255)
+    #password = models.CharField(max_length=255)
     enabled = models.BooleanField(default=True)
     date_create = models.DateTimeField(auto_now_add=False, auto_now=False, null=True, blank=True)
     date_update = models.DateTimeField(auto_now_add=False, auto_now=False, null=True, blank=True)

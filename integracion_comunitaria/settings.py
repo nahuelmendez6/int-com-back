@@ -145,3 +145,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 AUTH_USER_MODEL = 'authentication.User' # la entidad User de la app auth es la que maneja la autenticacion de usuario
+
+AUTHENTICATION_BACKENDS = [
+    'authentication.backends.EmailBackend',
+]
+
+SIMPLE_JWT = {
+    'USER_ID_FIELD': 'id_user',
+}

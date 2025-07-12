@@ -1,8 +1,10 @@
+from django.core.serializers import serialize
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .serializers import RegisterSerializer
+from .serializers import (RegisterSerializer,
+                          LoginSerializer)
 
 class RegisterUserAPIView(APIView):
 
@@ -16,6 +18,15 @@ class RegisterUserAPIView(APIView):
                 'email': user.email,
                 'role':'provider' if hasattr(user, 'provider') else 'customer'
             }, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class LoginAPIView(APIView):
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        if serializer.is_valid():
+            return Response(serializer.validated_data, status=status.HTTP_200_OK)
+        #print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
