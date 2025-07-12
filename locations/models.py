@@ -77,7 +77,7 @@ class City(models.Model):
 
     # para acceder a los proveedores asignados a una ciudad
     providers = models.ManyToManyField(
-        'Provider',
+        'authentication.Provider',
         through='ProviderCity',
         related_name='served_cities'
     )
@@ -117,7 +117,7 @@ class Address(models.Model):
 
 class ProviderCity(models.Model):
     provider = models.ForeignKey(
-        'Provider',
+        'authentication.Provider',
         on_delete=models.CASCADE,
         db_column='id_provider',
         related_name='provider_cities'

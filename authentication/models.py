@@ -95,10 +95,10 @@ class Provider(models.Model):
     description = models.TextField(null=True, blank=True)
 
     # para que el proveedor pueda acceder directamente a sus ciudades
-    cities = models.ManyToManyFiel(
-        'City',
-        through='ProviderCity',
-        related_name='providers'
+    cities = models.ManyToManyField(
+        'locations.City',
+        through='locations.ProviderCity',
+        related_name='provider_set'
     )
 
     class Meta:
