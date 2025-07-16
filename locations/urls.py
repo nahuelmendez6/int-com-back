@@ -1,8 +1,15 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import CountryViewSet, ProvinceViewSet, DepartmentViewSet, CityViewSet, AddressViewSet, ProviderCityViewSet
 
-from .views import AddressAPIView
+router = DefaultRouter()
+router.register(r'countries', CountryViewSet)
+router.register(r'provinces', ProvinceViewSet)
+router.register(r'departments', DepartmentViewSet)
+router.register(r'cities', CityViewSet)
+router.register(r'addresses', AddressViewSet)
+router.register(r'provider-cities', ProviderCityViewSet)
 
 urlpatterns = [
-    path('update-address/', AddressAPIView.as_view(), name='update-address'),
+    path('', include(router.urls)),
 ]
-
