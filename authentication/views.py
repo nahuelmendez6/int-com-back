@@ -6,6 +6,9 @@ from rest_framework.views import APIView
 from .serializers import (RegisterSerializer,
                           LoginSerializer)
 
+
+from .services import send_verification_email
+
 class RegisterUserAPIView(APIView):
 
     def post(self, request, *args, **kwargs):
@@ -13,6 +16,8 @@ class RegisterUserAPIView(APIView):
 
         if serializer.is_valid():
             user = serializer.save()
+
+            send_verification_email(user)
             return Response({
                 'message':'Usuario creado exitosamente',
                 'email': user.email,

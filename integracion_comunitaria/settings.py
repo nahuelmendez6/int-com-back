@@ -160,3 +160,17 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
+DEBUG = True
+
+# Celery + Redis
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # u otro
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'integracioncomunitaria2025@gmail.com'
+EMAIL_HOST_PASSWORD = 'live qfdp txew asuq '
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

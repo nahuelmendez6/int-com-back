@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, PermissionsMixin, BaseUserManager
 
+from profiles.models import Category
 
 class UserManager(BaseUserManager):
 
@@ -110,10 +111,29 @@ class Provider(models.Model):
 
 
 class ProviderCategory(models.Model):
-    provider = models.ForeignKey('Provider', on_delete=models.CASCADE, db_column='provider_id')
-    category = models.ForeignKey('profiles.Category', on_delete=models.CASCADE, db_column='category_id')
+    id = models.AutoField(primary_key=True)
+    provider = models.ForeignKey(Provider, on_delete=models.CASCADE, db_column='provider_id')
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, db_column='category_id')
 
     class Meta:
-        db_table = 'n_provider_category'
+        db_table = 'n_provider_cateogory'  # escribilo tal como está en la base de datos
+        unique_together = ('provider', 'category')
+
+
+class UserVerificationCode(models.Model):
+
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey('User', on_delete=models.CASCADE, db_column='user_id', related_name='verification_codes')
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_used = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'n_user_verification_code'
         managed = False
-        unique_together = (('provider', 'category'),)
+
+    def is_expired(self):
+        return timezone.now() > self.created_at + timedelta(minutes=10)
+
+    def __str__(self):
+        return f"Código {self.code} para {self.user.email}"
