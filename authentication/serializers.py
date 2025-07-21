@@ -1,3 +1,6 @@
+from datetime import timedelta
+
+from django.utils import timezone
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -6,9 +9,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from locations.models import Address
 from profiles.models import Category, TypeProvider, Profession
-from .models import User,  Customer, Provider
-
-
+from .models import User, Customer, Provider, UserVerificationCode
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -89,3 +90,43 @@ class LoginSerializer(serializers.Serializer):
             "user_id": user.id_user,
             "email": user.email,
         }
+
+
+
+class VerifyCodeSerializer(serializers.Serializer):
+
+    email = serializers.EmailField()
+    code = serializers.CharField(max_length=6)
+
+    def validate(self, data):
+        try:
+            user = User.objects.get(email=data['email'])
+        except User.DoesNotExist:
+            raise serializers.ValidationError('Usuario no encontrado')
+
+        code_obj = UserVerificationCode.objects.filter(
+            user=user,
+            code=data['code'],
+            is_used=False
+        ).order_by('-created_at').first()
+
+        if not code_obj:
+            raise serializers.ValidationError("Código inválido o ya usado")
+
+        if timezone.now() > code_obj.created_at + timedelta(minutes=10):
+            raise serializers.ValidationError("Código expirado")
+
+        self.user = user
+        self.code_obj = code_obj
+        return data
+
+    def save(self):
+        # Marcar código como usado
+        self.code_obj.is_used = True
+        self.code_obj.save()
+
+        # Marcar usuario como activo/verificado
+        self.user.is_active = True
+        self.user.save()
+
+        return self.user

@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .serializers import (RegisterSerializer,
-                          LoginSerializer)
+                          LoginSerializer, VerifyCodeSerializer)
 
 
 from .services import send_verification_email
@@ -43,4 +43,13 @@ class UpdateUserAPIView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response({'message': 'Perfil actualizado correctamente'}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class VerifyCodeAPIView(APIView):
+    def post(self, request):
+        serializer = VerifyCodeSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Código verificado correctamente"}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
