@@ -109,6 +109,18 @@ class Provider(models.Model):
     def __str__(self):
         return f"Proveedor: {self.user.email}"
 
+    def is_profile_complete(self):
+        has_categories = ProviderCategory.objects.filter(provider=self).exists()
+
+        return all([
+            self.type_provider is not None,
+            self.profession is not None,
+            self.address is not None,
+            bool(self.description),
+            has_categories,
+            self.cities.exists()
+        ])
+
 
 class ProviderCategory(models.Model):
     id = models.AutoField(primary_key=True)
