@@ -61,19 +61,21 @@ class LoginSerializer(serializers.Serializer):
         email = data.get('email')
         password = data.get('password')
 
-        if email is None or password is None:
-            raise serializers.ValidationError('Email y contraseña son requeridos.')
+        print("🔍 Intentando autenticación con:")
+        print(f"Email: {email}")
+        print(f"Password: {password}")
 
         user = authenticate(email=email, password=password)
+        print("🧪 Resultado de authenticate:", user)
+
         if not user:
             raise serializers.ValidationError('Credenciales inválidas.')
 
-        if not user.enabled:
+        if not user.is_active:
             raise serializers.ValidationError('Usuario deshabilitado.')
 
         refresh = RefreshToken.for_user(user)
 
-        # Obtener rol
         role = None
         if hasattr(user, 'customer'):
             role = 'customer'
@@ -82,7 +84,6 @@ class LoginSerializer(serializers.Serializer):
         else:
             role = 'admin' if user.is_staff else 'user'
 
-
         return {
             "refresh": str(refresh),
             "access": str(refresh.access_token),
@@ -90,7 +91,6 @@ class LoginSerializer(serializers.Serializer):
             "user_id": user.id_user,
             "email": user.email,
         }
-
 
 
 class VerifyCodeSerializer(serializers.Serializer):
@@ -130,3 +130,22 @@ class VerifyCodeSerializer(serializers.Serializer):
         self.user.save()
 
         return self.user
+
+
+class UserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = '__all__'
+
+
+class ProviderSerializer(serializers.ModelSerializer):
+
+    categories = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Category.objects.all()
+    )
+
+    class Meta:
+        model = Provider
+        fields = '__all__'

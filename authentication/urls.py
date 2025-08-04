@@ -1,10 +1,17 @@
 # auth/urls
 
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+
 from .views import (RegisterUserAPIView,
                     UpdateUserAPIView,
                     LoginAPIView,
-                    VerifyCodeAPIView)
+                    VerifyCodeAPIView,
+                    UserViewSet,
+                    UpdateProviderAPIView)
+
+router = DefaultRouter()
+router.register(r'', UserViewSet, basename='user')
 
 urlpatterns = [
     path('register-user/', RegisterUserAPIView.as_view(), name='register'),
@@ -13,5 +20,9 @@ urlpatterns = [
 
     path('update-user/', UpdateUserAPIView.as_view(), name='update-user'),
 
-    path('verify-code/', VerifyCodeAPIView.as_view(), name='verify-code')
+    path('update-provider/', UpdateProviderAPIView.as_view(), name='update-provider'),
+
+    path('verify-code/', VerifyCodeAPIView.as_view(), name='verify-code'),
+
+    path('', include(router.urls)),
 ]

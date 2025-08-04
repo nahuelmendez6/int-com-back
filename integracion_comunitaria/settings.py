@@ -65,7 +65,8 @@ MIDDLEWARE = [
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ]
+    ],
+
 }
 
 
@@ -150,6 +151,7 @@ AUTH_USER_MODEL = 'authentication.User' # la entidad User de la app auth es la q
 
 AUTHENTICATION_BACKENDS = [
     'authentication.backends.EmailBackend',
+'django.contrib.auth.backends.ModelBackend',
 ]
 
 SIMPLE_JWT = {
@@ -160,6 +162,11 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
+
+CORS_ALLOW_CREDENTIALS = True
+
+
+
 DEBUG = True
 
 # Celery + Redis
