@@ -7,8 +7,7 @@ from .views import (RegisterUserAPIView,
                     UpdateUserAPIView,
                     LoginAPIView,
                     VerifyCodeAPIView,
-                    UserViewSet,
-                    UpdateProviderAPIView)
+                    UserViewSet)
 
 router = DefaultRouter()
 router.register(r'', UserViewSet, basename='user')
@@ -19,8 +18,6 @@ urlpatterns = [
     path('login/', LoginAPIView.as_view(), name='login'),
 
     path('update-user/', UpdateUserAPIView.as_view(), name='update-user'),
-
-    path('update-provider/', UpdateProviderAPIView.as_view(), name='update-provider'),
 
     path('verify-code/', VerifyCodeAPIView.as_view(), name='verify-code'),
 

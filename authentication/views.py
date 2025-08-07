@@ -67,23 +67,7 @@ class UpdateUserAPIView(APIView):
             return Response({'message': 'Perfil actualizado correctamente'}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class UpdateProviderAPIView(APIView):
 
-        """
-        Vista para actualizar perfil de proveedor
-        """
-        def patch(self, request):
-            user = request.user
-            try:
-                provider = Provider.objects.get(user=user)
-            except Provider.DoesNotExist:
-                raise NotFound('Proveedor no encontrado')
-
-            serializer = ProviderSerializer(provider, data=request.data, partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return Response({'message': 'Perfil actualizado correctamente'}, status=status.HTTP_200_OK)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class VerifyCodeAPIView(APIView):

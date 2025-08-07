@@ -152,8 +152,6 @@ class ProviderSerializer(serializers.ModelSerializer):
             queryset=Category.objects.all()
         )
 
-        address = AddressSerializer(read_only=True)
-
         class Meta:
             model = Provider
             fields = '__all__'

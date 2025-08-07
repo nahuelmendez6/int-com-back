@@ -22,9 +22,14 @@ class CitySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class AddressSerializer(serializers.ModelSerializer):
+    city = serializers.PrimaryKeyRelatedField(queryset=City.objects.all())
+
     class Meta:
         model = Address
         fields = '__all__'
+
+    def create(self, validated_data):
+        return Address.objects.create(**validated_data)
 
 class ProviderCitySerializer(serializers.ModelSerializer):
     class Meta:

@@ -6,7 +6,8 @@ from .views import (
     ProfessionViewSet,
     ProfileStatusAPIView,
     ProfileDetailAPIView,
-    ProviderProfileAPIView
+    ProviderProfileAPIView,
+    ProviderProfileUpdateAPIView
 )
 
 router = DefaultRouter()
@@ -19,4 +20,5 @@ urlpatterns = [
     path('profile-status/', ProfileStatusAPIView.as_view()),
     path('profile/', ProfileDetailAPIView.as_view()),
     path('provider-profile/', ProviderProfileAPIView.as_view()),
+    path('provider-profile/update/', ProviderProfileUpdateAPIView.as_view()),
 ]

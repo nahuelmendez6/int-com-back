@@ -34,3 +34,30 @@ class ProviderProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Provider
         fields = ['categories', 'type_provider', 'profession', 'description', 'address']
+
+class ProviderProfileUpdateSerializer(serializers.ModelSerializer):
+    address = AddressSerializer(required=False)
+
+    class Meta:
+        model = Provider
+        fields = ['description', 'address']
+
+    def update(self, instance, validated_data):
+        address_data = validated_data.pop('address', None)
+        if address_data:
+            if instance.address:
+                address_serializer = AddressSerializer(instance.address, data=address_data, partial=True)
+                address_serializer.is_valid(raise_exception=True)
+                address_instance = address_serializer.save()
+                # Si la dirección cambió, actualizamos FK y guardamos Provider
+                if instance.address_id != address_instance.id_address:
+                    instance.address_id = address_instance.id_address
+                    instance.save()
+            else:
+                address_serializer = AddressSerializer(data=address_data)
+                address_serializer.is_valid(raise_exception=True)
+                address_instance = address_serializer.save()
+                instance.address_id = address_instance.id_address
+                instance.save()
+
+        return super().update(instance, validated_data)
