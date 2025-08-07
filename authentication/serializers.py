@@ -8,6 +8,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 
 from locations.models import Address
+from locations.serializers import AddressSerializer
 from profiles.models import Category, TypeProvider, Profession
 from .models import User, Customer, Provider, UserVerificationCode
 
@@ -141,11 +142,18 @@ class UserSerializer(serializers.ModelSerializer):
 
 class ProviderSerializer(serializers.ModelSerializer):
 
-    categories = serializers.PrimaryKeyRelatedField(
-        many=True,
-        queryset=Category.objects.all()
-    )
+        """
+        Este serilizer se usa para guardar info del proveedor
 
-    class Meta:
-        model = Provider
-        fields = '__all__'
+        """
+
+        categories = serializers.PrimaryKeyRelatedField(
+            many=True,
+            queryset=Category.objects.all()
+        )
+
+        address = AddressSerializer(read_only=True)
+
+        class Meta:
+            model = Provider
+            fields = '__all__'

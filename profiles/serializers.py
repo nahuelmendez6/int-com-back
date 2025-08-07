@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from authentication.models import User, Provider
+from locations.serializers import AddressSerializer
 from .models import Category, TypeProvider, Profession
 
 class ProfileSerializer(serializers.ModelSerializer):
@@ -28,7 +29,8 @@ class ProviderProfileSerializer(serializers.ModelSerializer):
     categories = CategorySerializer(many=True, read_only=True)
     type_provider = TypeProviderSerializer(read_only=True)
     profession = ProfessionSerializer(read_only=True)
+    address = AddressSerializer(read_only=True)
 
     class Meta:
         model = Provider
-        fields = ['categories', 'type_provider', 'profession', 'description']
+        fields = ['categories', 'type_provider', 'profession', 'description', 'address']
