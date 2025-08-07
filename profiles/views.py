@@ -92,8 +92,13 @@ class ProviderProfileUpdateAPIView(APIView):
                 print("Address validation errors:", e.detail)
                 return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
 
+            print("Pasó validación de address")
+
+        provider_data = request.data.copy()
+        provider_data.pop('address', None)
+
         # Actualizar el resto del proveedor (excepto dirección)
-        provider_serializer = ProviderProfileUpdateSerializer(provider, data=request.data, partial=True)
+        provider_serializer = ProviderProfileUpdateSerializer(provider, data=provider_data, partial=True)
         if provider_serializer.is_valid():
             provider_serializer.save()
             return Response(provider_serializer.data)

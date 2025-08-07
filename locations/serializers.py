@@ -22,11 +22,20 @@ class CitySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class AddressSerializer(serializers.ModelSerializer):
-    city = serializers.PrimaryKeyRelatedField(queryset=City.objects.all())
+    city = serializers.PrimaryKeyRelatedField(
+        queryset=City.objects.all(),
+        required=False,
+        allow_null=True)
 
     class Meta:
         model = Address
         fields = '__all__'
+
+    extra_kwargs = {
+        'city': {'required': False, 'allow_null': True},
+        'department': {'required': False, 'allow_blank': True},
+        'province': {'required': False, 'allow_blank': True},
+    }
 
     def create(self, validated_data):
         return Address.objects.create(**validated_data)

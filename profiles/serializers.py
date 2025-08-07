@@ -44,6 +44,10 @@ class ProviderProfileUpdateSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         address_data = validated_data.pop('address', None)
+
+        print("Datos validados recibidos:", validated_data)
+        print("Datos de dirección recibidos:", address_data)
+
         if address_data:
             if instance.address:
                 address_serializer = AddressSerializer(instance.address, data=address_data, partial=True)
