@@ -51,6 +51,15 @@ class ProviderCitiesAPIView(APIView):
         serializer = CitySerializer(cities, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+class ProviderCityDeleteAPIView(APIView):
+    def delete(self, request, provider_id, city_id):
+        print(f"Eliminar relación provider_id={provider_id}, city_id={city_id}")
+        deleted_count, _ = ProviderCity.objects.filter(provider_id=provider_id, city_id=city_id).delete()
+        if deleted_count == 0:
+            return Response({'detail': 'Relación no encontrada.'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'detail': 'Relación eliminada correctamente.'}, status=status.HTTP_204_NO_CONTENT)
+
+
 
 class ProviderCityViewSet(viewsets.ModelViewSet):
     queryset = ProviderCity.objects.all()
