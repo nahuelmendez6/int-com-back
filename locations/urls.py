@@ -1,6 +1,12 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import CountryViewSet, ProvinceViewSet, DepartmentViewSet, CityViewSet, AddressViewSet, ProviderCityViewSet
+from .views import (CountryViewSet,
+                    ProvinceViewSet,
+                    DepartmentViewSet,
+                    CityViewSet,
+                    AddressViewSet,
+                    ProviderCityViewSet,
+                    ProviderCitiesAPIView)
 
 router = DefaultRouter()
 router.register(r'countries', CountryViewSet)
@@ -12,4 +18,5 @@ router.register(r'provider-cities', ProviderCityViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('cities-area/<int:provider_id>/', ProviderCitiesAPIView.as_view(), name='cities-area')
 ]

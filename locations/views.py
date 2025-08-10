@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .models import Country, Province, Department, City, Address, ProviderCity
 from .serializers import (CountrySerializer,
@@ -41,6 +42,15 @@ class CityViewSet(viewsets.ModelViewSet):
 class AddressViewSet(viewsets.ModelViewSet):
     queryset = Address.objects.all()
     serializer_class = AddressSerializer
+
+
+class ProviderCitiesAPIView(APIView):
+    def get(self, request, provider_id):
+        provider_cities = ProviderCity.objects.filter(provider_id=provider_id).select_related('city')
+        cities = [pc.city for pc in provider_cities]
+        serializer = CitySerializer(cities, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class ProviderCityViewSet(viewsets.ModelViewSet):
     queryset = ProviderCity.objects.all()
