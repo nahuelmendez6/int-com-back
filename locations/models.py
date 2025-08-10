@@ -120,7 +120,8 @@ class ProviderCity(models.Model):
         'authentication.Provider',
         on_delete=models.CASCADE,
         db_column='id_provider',
-        related_name='provider_cities'
+        related_name='provider_cities',
+        primary_key=True
     )
     city = models.ForeignKey(
         'City',

@@ -33,7 +33,7 @@ class ProviderProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Provider
-        fields = ['categories', 'type_provider', 'profession', 'description', 'address']
+        fields = ['id_provider','categories', 'type_provider', 'profession', 'description', 'address']
 
 class ProviderProfileUpdateSerializer(serializers.ModelSerializer):
     address = AddressSerializer(required=False)

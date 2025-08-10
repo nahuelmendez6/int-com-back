@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -45,3 +45,12 @@ class AddressViewSet(viewsets.ModelViewSet):
 class ProviderCityViewSet(viewsets.ModelViewSet):
     queryset = ProviderCity.objects.all()
     serializer_class = ProviderCitySerializer
+
+    def create(self, request, *args, **kwargs):
+        is_many = isinstance(request.data, list)  # chequea si es lista o dict
+        serializer = self.get_serializer(data=request.data, many=is_many)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+

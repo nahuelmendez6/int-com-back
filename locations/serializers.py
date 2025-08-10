@@ -1,4 +1,6 @@
 from rest_framework import serializers
+
+from authentication.models import Provider
 from .models import Country, Province, Department, City, Address, ProviderCity
 
 class CountrySerializer(serializers.ModelSerializer):
@@ -41,6 +43,9 @@ class AddressSerializer(serializers.ModelSerializer):
         return Address.objects.create(**validated_data)
 
 class ProviderCitySerializer(serializers.ModelSerializer):
+    provider = serializers.PrimaryKeyRelatedField(queryset=Provider.objects.all())
+    city = serializers.PrimaryKeyRelatedField(queryset=City.objects.all())
+
     class Meta:
         model = ProviderCity
         fields = '__all__'
