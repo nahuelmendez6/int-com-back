@@ -5,9 +5,17 @@ from locations.serializers import AddressSerializer
 from .models import Category, TypeProvider, Profession
 
 class ProfileSerializer(serializers.ModelSerializer):
+    profile_image = serializers.SerializerMethodField()  # <-- aquí
+
     class Meta:
         model = User
-        fields = ['name', 'lastname', 'email']
+        fields = ['name', 'lastname', 'email', 'profile_image']
+
+    def get_profile_image(self, obj):
+        if obj.profile_image:
+            request = self.context.get('request')
+            return request.build_absolute_uri(obj.profile_image.url)
+        return None
 
 
 class CategorySerializer(serializers.ModelSerializer):

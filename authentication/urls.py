@@ -7,7 +7,8 @@ from .views import (RegisterUserAPIView,
                     UpdateUserAPIView,
                     LoginAPIView,
                     VerifyCodeAPIView,
-                    UserViewSet)
+                    UserViewSet,
+                    UserProfileUpdateView)
 
 router = DefaultRouter()
 router.register(r'', UserViewSet, basename='user')
@@ -20,6 +21,8 @@ urlpatterns = [
     path('update-user/', UpdateUserAPIView.as_view(), name='update-user'),
 
     path('verify-code/', VerifyCodeAPIView.as_view(), name='verify-code'),
+
+    path('profile-picture/update/', UserProfileUpdateView.as_view(), name='profile-update'),
 
     path('', include(router.urls)),
 ]

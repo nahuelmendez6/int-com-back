@@ -32,7 +32,7 @@ class User(AbstractUser):
     enabled = models.BooleanField(default=True)
     date_create = models.DateTimeField(auto_now_add=False, auto_now=False, null=True, blank=True)
     date_update = models.DateTimeField(auto_now_add=False, auto_now=False, null=True, blank=True)
-
+    profile_image = models.ImageField(upload_to='profiles/', null=True, blank=True)
 
     username = None # Eliminamos el campo username del modelo original
     first_name = None

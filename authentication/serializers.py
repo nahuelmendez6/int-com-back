@@ -137,7 +137,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = '__all__'
+        fields = ['id_user', 'name', 'lastname', 'email', 'profile_image']
 
 
 class ProviderSerializer(serializers.ModelSerializer):
@@ -155,3 +155,17 @@ class ProviderSerializer(serializers.ModelSerializer):
         class Meta:
             model = Provider
             fields = '__all__'
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    profile_image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['name', 'lastname', 'email', 'profile_image']
+
+    def get_profile_image_url(self, obj):
+        request = self.context.get('request')
+        if obj.profile_image and hasattr(obj.profile_image, 'url'):
+            return request.build_absolute_uri(obj.profile_image.url)
+        return None

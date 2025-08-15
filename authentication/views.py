@@ -1,5 +1,6 @@
 from django.core.serializers import serialize
-from rest_framework import status
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework import status, generics
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
@@ -9,7 +10,8 @@ from rest_framework import viewsets
 
 from .models import User, Provider
 from .serializers import (RegisterSerializer,
-                          LoginSerializer, VerifyCodeSerializer, UserSerializer, ProviderSerializer)
+                          LoginSerializer, VerifyCodeSerializer, UserSerializer, ProviderSerializer,
+                          UserProfileSerializer)
 
 
 from .services import send_verification_email
@@ -77,3 +79,24 @@ class VerifyCodeAPIView(APIView):
             serializer.save()
             return Response({"message": "Código verificado correctamente"}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class UserProfileUpdateView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]  # DRF lo maneja correctamente
+
+    def patch(self, request, *args, **kwargs):
+        user = request.user
+        profile_image = request.FILES.get('profile_image')
+
+        if not profile_image:
+            return Response({"error": "No se envió ninguna imagen"}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.profile_image = profile_image
+        user.save()
+
+        profile_url = request.build_absolute_uri(user.profile_image.url)
+        return Response({"profile_image": profile_url}, status=status.HTTP_200_OK)
+
+
