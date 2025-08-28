@@ -24,6 +24,11 @@ class CitySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class AddressSerializer(serializers.ModelSerializer):
+
+    # para lectura, se neceseita informacion de la ciudad
+    city_detail = CitySerializer(source='city', read_only=True)
+
+    # para escritura, solo se necesita id_city
     city = serializers.PrimaryKeyRelatedField(
         queryset=City.objects.all(),
         required=False,
@@ -31,13 +36,24 @@ class AddressSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Address
-        fields = '__all__'
+        fields = [
+            'id_address',
+            'street',
+            'number',
+            'floor',
+            'apartment',
+            'postal_code',
+            'city',
+            'city_detail',
+            'date_create',
+            'date_update'
+        ]
 
-    extra_kwargs = {
-        'city': {'required': False, 'allow_null': True},
-        'department': {'required': False, 'allow_blank': True},
-        'province': {'required': False, 'allow_blank': True},
-    }
+        extra_kwargs = {
+            'city': {'required': False, 'allow_null': True},
+            'department': {'required': False, 'allow_blank': True},
+            'province': {'required': False, 'allow_blank': True},
+        }
 
     def create(self, validated_data):
         return Address.objects.create(**validated_data)
