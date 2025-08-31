@@ -1,15 +1,15 @@
 from rest_framework import serializers
 
-from authentication.models import User, Provider
+from authentication.models import User, Provider, Customer
 from locations.serializers import AddressSerializer
 from .models import Category, TypeProvider, Profession
 
 class ProfileSerializer(serializers.ModelSerializer):
     profile_image = serializers.SerializerMethodField()  # <-- aquí
-
+    address = AddressSerializer(read_only=True)
     class Meta:
         model = User
-        fields = ['name', 'lastname', 'email', 'profile_image']
+        fields = ['name', 'lastname', 'email', 'profile_image', 'address']
 
     def get_profile_image(self, obj):
         if obj.profile_image:
@@ -32,6 +32,14 @@ class ProfessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profession
         fields = '__all__'
+
+
+class CustomerProfileSerializer(serializers.ModelSerializer):
+    address = AddressSerializer(read_only=True)
+
+    class Meta:
+        model = Customer
+        fields = ['id_customer', 'dni', 'phone', 'address']
 
 class ProviderProfileSerializer(serializers.ModelSerializer):
     categories = CategorySerializer(many=True, read_only=True)

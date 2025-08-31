@@ -8,7 +8,7 @@ from locations.serializers import AddressSerializer
 from .models import Category, TypeProvider, Profession
 from .serializers import (
     CategorySerializer, TypeProviderSerializer, ProfessionSerializer, ProfileSerializer, ProviderProfileSerializer,
-    ProviderProfileUpdateSerializer
+    ProviderProfileUpdateSerializer, CustomerProfileSerializer
 )
 
 
@@ -19,6 +19,15 @@ class ProviderProfileAPIView(APIView):
         provider = request.user.provider
         serializer = ProviderProfileSerializer(provider)
         return Response(serializer.data)
+
+class CustomerProfileAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        customer = request.user.customer
+        serializer = CustomerProfileSerializer(customer)
+        return Response(serializer.data)
+
 
 
 class ProfileDetailAPIView(APIView):
@@ -55,6 +64,56 @@ class ProfileStatusAPIView(APIView):
         return Response({
             'profile_complete': is_complete
         })
+
+
+
+class CustomerProfileUpdateAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request):
+        customer = request.user.customer
+        address_data = request.data.get('address')
+        print("Received address data:", address_data)
+
+        if address_data:
+            address_id = address_data.get('id_address', None)
+            if address_id:
+                try:
+                    address = Address.objects.get(id_address=address_id)
+                    address_serializer = AddressSerializer(address, data=address_data, partial=True)
+                except Address.DoesNotExist:
+                    return Response({'address': 'Dirección no encontrada'}, status=status.HTTP_404_NOT_FOUND)
+            else:
+                address_serializer = AddressSerializer(data=address_data)
+
+            try:
+                address_serializer.is_valid(raise_exception=True)
+                address_instance = address_serializer.save()
+
+                if customer.address_id != address_instance.id_address:
+                    customer.address_id = address_instance.id_address
+                    customer.save()
+
+            except serializers.ValidationError as e:
+                print("Address validation errors:", e.detail)
+                return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
+
+            print("Pasó validación de address")
+
+        # 👇 Este return faltaba
+        return Response(
+            {
+                "message": "Perfil de cliente actualizado correctamente",
+                "customer": {
+                    "id": customer.id_customer,
+                    "email": customer.user.email,
+                    "address": AddressSerializer(customer.address).data if customer.address else None
+                }
+            },
+            status=status.HTTP_200_OK
+        )
+
+
 
 class ProviderProfileUpdateAPIView(APIView):
     permission_classes = [IsAuthenticated]
