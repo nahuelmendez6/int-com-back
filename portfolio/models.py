@@ -15,7 +15,7 @@ class Portfolio(models.Model):
         db_column='id_provider',
         related_name='provider_portfolio',
         primary_key=True
-    ),
+    )
     id_user_create = models.IntegerField(null=True, blank=True),
     id_user_update = models.IntegerField(null=True, blank=True)
     date_create = models.DateTimeField(auto_now_add=True)
@@ -47,7 +47,7 @@ class PortfolioAttachment(models.Model):
         on_delete=models.CASCADE,
         db_column='id_portfolio',
         related_name='portfolio_attachments'
-    ),
+    )
     file_name = models.CharField(max_length=255),
     file_path = models.CharField(max_length=500),
     file_type = models.CharField(
