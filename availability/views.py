@@ -56,3 +56,13 @@ class AvaialabilityAPIView(APIView):
             return Response(AvailabilitySerializer(availability).data, status=status.HTTP_200_OK)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    
+    def delete(self, request, pk=None):
+        """
+        Eliminar una disponibilidad
+        """
+        availability = get_object_or_404(Availability, pk=pk)
+        availability.delete()
+        
+        return Response(status=status.HTTP_204_NO_CONTENT)
