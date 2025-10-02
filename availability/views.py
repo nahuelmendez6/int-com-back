@@ -14,21 +14,19 @@ class AvaialabilityAPIView(APIView):
     """
     
     def post(self, request):
-        
         """
         Crea una disponibilidad
         """
-        
         serializer = AvailabilitySerializer(data=request.data)
 
         if serializer.is_valid():
-            availability = serializer.save(many=True)
-            return Response(
-                serializer.validated_data, 
-                status=status.HTTP_200_OK
-            )
-        
+            availability = serializer.save()
+            #  devolvemos los datos serializados en JSON
+            output_serializer = AvailabilitySerializer(availability)
+            return Response(output_serializer.data, status=status.HTTP_201_CREATED)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     
 
     def get(self, request, id_provider):

@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'authentication',
     'locations',
     'profiles',
+    'availability',
 
 ]
 

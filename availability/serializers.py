@@ -1,30 +1,34 @@
 from rest_framework import serializers
 
 from .models import Availability
+from authentication.models import Provider
 
 class AvailabilitySerializer(serializers.ModelSerializer):
+    id_provider = serializers.PrimaryKeyRelatedField(
+        queryset=Provider.objects.all()
+    )
 
     class Meta:
         model = Availability
         fields = '__all__'
 
     def validate(self, data):
-        """
-        Validar que start_time sea menor que end_time
-        """
-        if self.initial_data['start_time'] >= self.initial_data['end_time']:
+         # Si es PATCH, usar los valores actuales si no vienen
+        start_time = data.get('start_time', getattr(self.instance, 'start_time', None))
+        end_time = data.get('end_time', getattr(self.instance, 'end_time', None))
+        provider = data.get('id_provider', getattr(self.instance, 'id_provider', None))
+        day_of_week = data.get('day_of_week', getattr(self.instance, 'day_of_week', None))
+
+
+        # Validar rango horario
+        if start_time >= end_time:
             raise serializers.ValidationError("start_time debe ser menor que end_time")
-        return data
-    
-        """
-        Validar solapamiento
-        """
+
+        # Validar solapamiento
         qs = Availability.objects.filter(
             id_provider=provider,
             day_of_week=day_of_week,
         )
-
-        # Si estamos editando un registro, excluirlo de la busqueda
         if self.instance:
             qs = qs.exclude(pk=self.instance.pk)
 
@@ -35,5 +39,5 @@ class AvailabilitySerializer(serializers.ModelSerializer):
 
         if overlap:
             raise serializers.ValidationError("El rango horario se solapa con otro existente")
-        
+
         return data

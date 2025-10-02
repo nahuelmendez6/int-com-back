@@ -25,13 +25,17 @@ class Availability(models.Model):
 
     id_availability = models.AutoField(primary_key=True)
     id_provider = models.ForeignKey(
-        'authentication.Provider', on_delete=models.CASCADE, db_column='id_provider', related_name='availabilities'
+        'authentication.Provider',
+        on_delete=models.CASCADE,
+        db_column='id_provider',
+        related_name='availabilities'
     )
+
     day_of_week = models.IntegerField()
     start_time = models.TimeField()
     end_time = models.TimeField()
 
 
     class Meta:
-        db_table = 'n_availability'
+        db_table = 'n_availabilities'
         managed = False

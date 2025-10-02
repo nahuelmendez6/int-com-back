@@ -26,5 +26,7 @@ urlpatterns = [
 
     path('locations/', include('locations.urls')),
     path('profiles/', include('profiles.urls')),
+
+    path('availability/', include('availability.urls'))
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
  
