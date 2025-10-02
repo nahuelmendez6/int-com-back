@@ -19,5 +19,5 @@ router.register(r'provider-cities', ProviderCityViewSet)
 urlpatterns = [
     path('', include(router.urls)),
     path('cities-area/<int:provider_id>/', ProviderCitiesAPIView.as_view(), name='cities-area'),
-path('providers/<int:provider_id>/cities/<int:city_id>/', ProviderCityDeleteAPIView.as_view(), name='providercity-delete'),
+    path('providers/<int:provider_id>/cities/<int:city_id>/', ProviderCityDeleteAPIView.as_view(), name='providercity-delete'),
 ]
