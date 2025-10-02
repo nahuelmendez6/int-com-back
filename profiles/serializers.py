@@ -53,10 +53,25 @@ class ProviderProfileSerializer(serializers.ModelSerializer):
 
 class ProviderProfileUpdateSerializer(serializers.ModelSerializer):
     address = AddressSerializer(required=False)
+    profession = serializers.PrimaryKeyRelatedField(
+        queryset=Profession.objects.all(),
+        required=False,
+        allow_null=True
+    )
+    type_provider = serializers.PrimaryKeyRelatedField(
+        queryset=TypeProvider.objects.all(),
+        required=False,
+        allow_null=True
+    )
+    categories = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all(),
+        many=True,
+        required=False
+    )
 
     class Meta:
         model = Provider
-        fields = ['description', 'address']
+        fields = ['description', 'address', 'profession', 'type_provider', 'categories']
 
     def update(self, instance, validated_data):
         address_data = validated_data.pop('address', None)
@@ -69,7 +84,6 @@ class ProviderProfileUpdateSerializer(serializers.ModelSerializer):
                 address_serializer = AddressSerializer(instance.address, data=address_data, partial=True)
                 address_serializer.is_valid(raise_exception=True)
                 address_instance = address_serializer.save()
-                # Si la dirección cambió, actualizamos FK y guardamos Provider
                 if instance.address_id != address_instance.id_address:
                     instance.address_id = address_instance.id_address
                     instance.save()
@@ -80,4 +94,5 @@ class ProviderProfileUpdateSerializer(serializers.ModelSerializer):
                 instance.address_id = address_instance.id_address
                 instance.save()
 
+        # dejar que DRF maneje profession, type_provider y categories
         return super().update(instance, validated_data)
