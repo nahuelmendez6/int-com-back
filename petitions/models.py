@@ -32,8 +32,8 @@ class Petition(models.Model):
     id_type_petition = models.ForeignKey(TypePetition, on_delete=models.PROTECT, db_column='id_type_petition')
     id_customer = models.IntegerField()
     description = models.TextField(null=True, blank=True)
-    id_profession = models.ForeignKey('Profession', on_delete=models.SET_NULL, db_column='id_profession', null=True, blank=True)
-    id_type_provider = models.ForeignKey('TypeProvider', on_delete=models.SET_NULL, db_column='id_type_provider', null=True, blank=True)
+    id_profession = models.ForeignKey('profiles.Profession', on_delete=models.SET_NULL, db_column='id_profession', null=True, blank=True)
+    id_type_provider = models.ForeignKey('profiles.TypeProvider', on_delete=models.SET_NULL, db_column='id_type_provider', null=True, blank=True)
     id_state = models.ForeignKey(PetitionState, on_delete=models.SET_NULL, db_column='id_state', null=True, blank=True)
     date_since = models.DateField(null=True, blank=True)
     date_until = models.DateField(null=True, blank=True)
@@ -42,7 +42,7 @@ class Petition(models.Model):
     date_create = models.DateTimeField(auto_now_add=True)
     date_update = models.DateTimeField(auto_now=True)
 
-    categories = models.ManyToManyField('Category', through='PetitionCategory')
+    categories = models.ManyToManyField('profiles.Category', through='PetitionCategory')
 
     class Meta:
         db_table = 'n_petition'
@@ -53,7 +53,7 @@ class PetitionCategory(models.Model):
 
     id_petition_category = models.AutoField(primary_key=True)
     id_petition = models.ForeignKey(Petition, on_delete=models.CASCADE, db_column='id_petition')
-    id_category = models.ForeignKey('Category', on_delete=models.CASCADE, db_column='id_category')
+    id_category = models.ForeignKey('profiles.Category', on_delete=models.CASCADE, db_column='id_category')
 
     class Meta:
         db_table = 'n_petition_category'
