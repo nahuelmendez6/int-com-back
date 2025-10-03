@@ -58,3 +58,19 @@ class PetitionCategory(models.Model):
     class Meta:
         db_table = 'n_petition_category'
         managed = False
+
+
+class PetitionAttachment(models.Model):
+
+    id_petition_attachment = models.AutoField(primary_key=True)
+    id_petition = models.ForeignKey(Petition, on_delete=models.CASCADE, db_column='id_petition')
+    url = models.CharField(max_length=500)
+    type = models.CharField(max_length=50)
+    id_user_create = models.IntegerField(null=True, blank=True)
+    id_user_update = models.IntegerField(null=True, blank=True)
+    date_create = models.DateTimeField(auto_now_add=True)
+    date_update = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'n_petition_attachment'
+        managed = False
