@@ -90,3 +90,16 @@ class PetitionMaterial(models.Model):
     class Meta:
         db_table = 'n_petition_material'
         managed = False
+
+
+class PetitionStateHistory(models.Model):
+    id_petition_state_history = models.AutoField(primary_key=True)
+    id_petition = models.ForeignKey(Petition, on_delete=models.CASCADE, db_column='id_petition')
+    id_state = models.ForeignKey(PetitionState, on_delete=models.PROTECT, db_column='id_state')
+    changed_by_user_id = models.IntegerField()
+    note = models.CharField(max_length=255, null=True, blank=True)
+    change_date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'n_petition_state_history'
+        managed = False
