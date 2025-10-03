@@ -74,3 +74,19 @@ class PetitionAttachment(models.Model):
     class Meta:
         db_table = 'n_petition_attachment'
         managed = False
+
+
+class PetitionMaterial(models.Model):
+    id_petition_material = models.AutoField(primary_key=True)
+    id_petition = models.ForeignKey(Petition, on_delete=models.CASCADE, db_column='id_petition')
+    id_article = models.IntegerField()
+    quantity = models.IntegerField()
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    id_user_create = models.IntegerField(null=True, blank=True)
+    id_user_update = models.IntegerField(null=True, blank=True)
+    date_create = models.DateTimeField(auto_now_add=True)
+    date_update = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'n_petition_material'
+        managed = False
