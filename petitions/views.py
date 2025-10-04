@@ -101,3 +101,46 @@ class PetitionAPIView(APIView):
             return Response(PetitionSerializer(petition).data, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request, pk):
+        petition = get_object_or_404(Petition, pk=pk)
+        serializer = PetitionSerializer(petition, data=request.data, partial=True)  # partial=True permite actualizar solo los campos enviados
+        if serializer.is_valid():
+            petition = serializer.save()
+
+            #  Actualizar categorías
+            if "categories" in request.data:
+                PetitionCategory.objects.filter(id_petition=petition).delete()
+                for cat in request.data.get("categories", []):
+                    PetitionCategory.objects.create(
+                        id_petition=petition,
+                        id_category_id=cat.get("id_category")
+                    )
+
+            # Actualizar adjuntos
+            if "attachments" in request.data:
+                PetitionAttachment.objects.filter(id_petition=petition).delete()
+                for att in request.data.get("attachments", []):
+                    PetitionAttachment.objects.create(
+                        id_petition=petition,
+                        url=att.get("url"),
+                        type=att.get("type"),
+                        id_user_create=att.get("id_user_create")
+                    )
+
+            # Actualizar materiales
+            if "materials" in request.data:
+                PetitionMaterial.objects.filter(id_petition=petition).delete()
+                for mat in request.data.get("materials", []):
+                    PetitionMaterial.objects.create(
+                        id_petition=petition,
+                        id_article=mat.get("id_article"),
+                        quantity=mat.get("quantity"),
+                        unit_price=mat.get("unit_price"),
+                        id_user_create=mat.get("id_user_create")
+                    )
+
+            return Response(PetitionSerializer(petition).data, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+

@@ -4,6 +4,10 @@ from .views import PetitionAPIView
 
 urlpatterns = [
 
-    path('', PetitionAPIView.as_view(), name='petition-create')
+    # URL para creacion o para consumo de multiples peticiones
+    path('', PetitionAPIView.as_view(), name='petition-create'),
 
+    # URL para consumo/edicion de peticiones individuales
+    path('<int:pk>/', PetitionAPIView.as_view(), name='petition-detail'),
 ]
+
