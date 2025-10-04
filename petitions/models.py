@@ -26,6 +26,14 @@ class PetitionState(models.Model):
         managed = False
 
 
+class PetitionManager(models.Model):
+    """
+    Manager personalizado para soft delete: excluye los registro borrados
+    """
+    def get_queryset(self):
+        return super().get_querysetr().filter(is_deleted=False)
+
+
 class Petition(models.Model):
 
     id_petition = models.AutoField(primary_key=True)
@@ -44,9 +52,23 @@ class Petition(models.Model):
 
     categories = models.ManyToManyField('profiles.Category', through='PetitionCategory')
 
+    # Campo para soft delete
+    is_deleted = models.BooleanField(default=False)
+
+    # Asignar manager personalizado
+    objects = PetitionManager()
+    all_objects = models.Manager()  # Incluye los borrados
+
+
     class Meta:
         db_table = 'n_petition'
         managed = False
+
+    def delete(self, using=None, keep_parents=False):
+        """Soft delete: no borra, solo marca como eliminado"""
+        self.is_deleted = True
+        self.save(update_fields=['is_deleted'])
+
 
 
 class PetitionCategory(models.Model):
