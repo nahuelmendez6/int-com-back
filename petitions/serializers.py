@@ -64,8 +64,12 @@ class PetitionSerializer(serializers.ModelSerializer):
 
 
     # Relaciones directas
-    id_type_petition = TypePetitionSerializer(read_only=True)
-    id_state = PetitionStateSerializer(read_only=True)
+    id_type_petition = serializers.PrimaryKeyRelatedField(
+        queryset=TypePetition.objects.all()
+    )
+    id_state = serializers.PrimaryKeyRelatedField(
+        queryset=PetitionState.objects.all()
+    )
 
     class Meta:
         model = Petition

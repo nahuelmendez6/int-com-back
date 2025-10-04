@@ -28,7 +28,7 @@ class PetitionAPIView(APIView):
     APIView para CRUD de peticiones con escritura anidada y filtro por proveedor
     """
 
-    def get(slef, request, pk=None):
+    def get(self, request, pk=None):
         provider = getattr(request.user, 'provider', None)
         customer = getattr(request.user, 'customer', None)
 
@@ -50,12 +50,12 @@ class PetitionAPIView(APIView):
         elif customer:
             if pk:
                 petition = get_object_or_404(
-                    Petition.objects.filter(id_customer=customer), pk=pk
+                    Petition.objects.filter(id_customer=customer.id_customer), pk=pk
                 )
                 serializer = PetitionSerializer(petition)
                 return Response(serializer.data, status=status.HTTP_200_OK)
             
-            petitions = Petition.objects.filter(id_customer=customer)
+            petitions = Petition.objects.filter(id_customer=customer.id_customer)
             serializer = PetitionSerializer(petitions, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         
@@ -65,3 +65,39 @@ class PetitionAPIView(APIView):
             status=status.HTTP_403_FORBIDDEN
         )
         
+    def post(self, request):
+        serializer = PetitionSerializer(data=request.data)
+
+        if serializer.is_valid():
+            petition = serializer.save()
+
+            # Crear categorias anidadas
+            for cat in request.data.get("categories", []):
+                PetitionCategory.objects.create(
+                    id_petition=petition,
+                    id_category_id=cat.get("id_category")
+                )
+
+            
+            # Crear adjuntos anidados
+            for att in request.data.get("attachments", []):
+                PetitionAttachment.objects.create(
+                    id_petition=petition,
+                    url=att.get("url"),
+                    type=att.get("type"),
+                    id_user_create=att.get("id_user_create")
+                )
+
+            # Crear materiales anidados
+            for mat in request.data.get("materials", []):
+                PetitionMaterial.objects.create(
+                    id_petition=petition,
+                    id_article=mat.get("id_article"),
+                    quantity=mat.get("quantity"),
+                    unit_price=mat.get("unit_price"),
+                    id_user_create=mat.get("id_user_create")
+                )
+
+            return Response(PetitionSerializer(petition).data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

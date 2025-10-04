@@ -27,6 +27,8 @@ urlpatterns = [
     path('locations/', include('locations.urls')),
     path('profiles/', include('profiles.urls')),
 
-    path('availability/', include('availability.urls'))
+    path('availability/', include('availability.urls')),
+
+    path('petitions/', include('petitions.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
  
