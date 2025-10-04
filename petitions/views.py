@@ -22,6 +22,18 @@ from .serializers import (PetitionSerializer,
                           PetitionAttachmentSerializer)
 
 
+class TypePetitionAPIView(APIView):
+
+    """
+    APIView para consumir Typepetition
+    """
+    def get(self, request):
+        typePetition = TypePetition.objects.all()
+        serializer = TypePetitionSerializer(typePetition, many=True)
+        
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 class PetitionAPIView(APIView):
 
     """
