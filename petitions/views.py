@@ -34,8 +34,15 @@ class TypePetitionAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class PetitionAPIView(APIView):
+import json
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.shortcuts import get_object_or_404
+from .models import Petition, PetitionCategory, PetitionAttachment, PetitionMaterial
+from .serializers import PetitionSerializer
 
+class PetitionAPIView(APIView):
     """
     APIView para CRUD de peticiones con escritura anidada y filtro por proveedor
     """
@@ -57,7 +64,6 @@ class PetitionAPIView(APIView):
             serializer = PetitionSerializer(petitions, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         
-
         # Caso: cliente autenticado
         elif customer:
             if pk:
@@ -81,49 +87,58 @@ class PetitionAPIView(APIView):
         serializer = PetitionSerializer(data=request.data)
 
         if serializer.is_valid():
-            petition = serializer.save()
+            petition = serializer.save(id_customer=request.user.customer.id_customer)
 
-            # Crear categorias anidadas
+            # Crear categorías
             for cat in request.data.get("categories", []):
+                # cat puede ser un dict o un string con id_category
+                id_category = cat
+                if isinstance(cat, dict):
+                    id_category = cat.get("id_category")
                 PetitionCategory.objects.create(
                     id_petition=petition,
-                    id_category_id=cat.get("id_category")
+                    id_category_id=id_category
                 )
 
-            
-            # Crear adjuntos anidados
-            for att in request.data.get("attachments", []):
+            # Crear adjuntos
+            for att in request.FILES.getlist("attachments"):
                 PetitionAttachment.objects.create(
                     id_petition=petition,
-                    url=att.get("url"),
-                    type=att.get("type"),
-                    id_user_create=att.get("id_user_create")
+                    file=att,
+                    #type=None,  # si tenés un campo type, enviarlo como input adicional
+                    id_user_create=request.user.pk
                 )
 
-            # Crear materiales anidados
+            # Crear materiales si vienen en JSON
             for mat in request.data.get("materials", []):
                 PetitionMaterial.objects.create(
                     id_petition=petition,
                     id_article=mat.get("id_article"),
                     quantity=mat.get("quantity"),
                     unit_price=mat.get("unit_price"),
-                    id_user_create=mat.get("id_user_create")
+                    id_user_create=request.user.id
                 )
 
             return Response(PetitionSerializer(petition).data, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
     def patch(self, request, pk):
         petition = get_object_or_404(Petition, pk=pk)
-        serializer = PetitionSerializer(petition, data=request.data, partial=True)  # partial=True permite actualizar solo los campos enviados
+        serializer = PetitionSerializer(petition, data=request.data, partial=True)
         if serializer.is_valid():
             petition = serializer.save()
 
-            #  Actualizar categorías
+            # Actualizar categorías
             if "categories" in request.data:
                 PetitionCategory.objects.filter(id_petition=petition).delete()
-                for cat in request.data.get("categories", []):
+                try:
+                    categories_list = json.loads(request.data.get("categories", "[]"))
+                except json.JSONDecodeError:
+                    categories_list = []
+
+                for cat in categories_list:
                     PetitionCategory.objects.create(
                         id_petition=petition,
                         id_category_id=cat.get("id_category")
@@ -132,10 +147,15 @@ class PetitionAPIView(APIView):
             # Actualizar adjuntos
             if "attachments" in request.data:
                 PetitionAttachment.objects.filter(id_petition=petition).delete()
-                for att in request.data.get("attachments", []):
+                try:
+                    attachments_list = json.loads(request.data.get("attachments", "[]"))
+                except json.JSONDecodeError:
+                    attachments_list = []
+
+                for att in attachments_list:
                     PetitionAttachment.objects.create(
                         id_petition=petition,
-                        url=att.get("url"),
+                        file=att.get("file"),
                         type=att.get("type"),
                         id_user_create=att.get("id_user_create")
                     )
@@ -143,7 +163,12 @@ class PetitionAPIView(APIView):
             # Actualizar materiales
             if "materials" in request.data:
                 PetitionMaterial.objects.filter(id_petition=petition).delete()
-                for mat in request.data.get("materials", []):
+                try:
+                    materials_list = json.loads(request.data.get("materials", "[]"))
+                except json.JSONDecodeError:
+                    materials_list = []
+
+                for mat in materials_list:
                     PetitionMaterial.objects.create(
                         id_petition=petition,
                         id_article=mat.get("id_article"),
@@ -155,4 +180,3 @@ class PetitionAPIView(APIView):
             return Response(PetitionSerializer(petition).data, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-

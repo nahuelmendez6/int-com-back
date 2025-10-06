@@ -1,5 +1,9 @@
 from django.db import models
 
+
+def petition_upload_path(instance, filename):
+    return f"petitions/{instance.id_petition.id_petition}/{filename}"
+
 # Create your models here.
 class TypePetition(models.Model):
     
@@ -26,12 +30,12 @@ class PetitionState(models.Model):
         managed = False
 
 
-class PetitionManager(models.Model):
+class PetitionManager(models.Manager):
     """
     Manager personalizado para soft delete: excluye los registro borrados
     """
     def get_queryset(self):
-        return super().get_querysetr().filter(is_deleted=False)
+        return super().get_queryset().filter(is_deleted=False)
 
 
 class Petition(models.Model):
@@ -86,8 +90,8 @@ class PetitionAttachment(models.Model):
 
     id_petition_attachment = models.AutoField(primary_key=True)
     id_petition = models.ForeignKey(Petition, on_delete=models.CASCADE, db_column='id_petition')
-    url = models.CharField(max_length=500)
-    type = models.CharField(max_length=50)
+    file = models.FileField(upload_to=petition_upload_path, db_column='url')
+    # type = models.CharField(max_length=50)
     id_user_create = models.IntegerField(null=True, blank=True)
     id_user_update = models.IntegerField(null=True, blank=True)
     date_create = models.DateTimeField(auto_now_add=True)
