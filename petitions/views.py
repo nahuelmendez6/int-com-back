@@ -133,48 +133,35 @@ class PetitionAPIView(APIView):
             # Actualizar categorías
             if "categories" in request.data:
                 PetitionCategory.objects.filter(id_petition=petition).delete()
-                try:
-                    categories_list = json.loads(request.data.get("categories", "[]"))
-                except json.JSONDecodeError:
-                    categories_list = []
-
+                categories_list = request.data.get("categories", [])
                 for cat in categories_list:
+                    id_category = cat.get("id_category") if isinstance(cat, dict) else cat
                     PetitionCategory.objects.create(
                         id_petition=petition,
-                        id_category_id=cat.get("id_category")
+                        id_category_id=id_category
                     )
 
             # Actualizar adjuntos
-            if "attachments" in request.data:
+            if "attachments" in request.FILES:
                 PetitionAttachment.objects.filter(id_petition=petition).delete()
-                try:
-                    attachments_list = json.loads(request.data.get("attachments", "[]"))
-                except json.JSONDecodeError:
-                    attachments_list = []
-
-                for att in attachments_list:
+                for att in request.FILES.getlist("attachments"):
                     PetitionAttachment.objects.create(
                         id_petition=petition,
-                        file=att.get("file"),
-                        type=att.get("type"),
-                        id_user_create=att.get("id_user_create")
+                        file=att,
+                        id_user_create=request.user.pk
                     )
 
             # Actualizar materiales
             if "materials" in request.data:
                 PetitionMaterial.objects.filter(id_petition=petition).delete()
-                try:
-                    materials_list = json.loads(request.data.get("materials", "[]"))
-                except json.JSONDecodeError:
-                    materials_list = []
-
+                materials_list = request.data.get("materials", [])
                 for mat in materials_list:
                     PetitionMaterial.objects.create(
                         id_petition=petition,
                         id_article=mat.get("id_article"),
                         quantity=mat.get("quantity"),
                         unit_price=mat.get("unit_price"),
-                        id_user_create=mat.get("id_user_create")
+                        id_user_create=request.user.pk
                     )
 
             return Response(PetitionSerializer(petition).data, status=status.HTTP_200_OK)
