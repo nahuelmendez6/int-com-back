@@ -78,7 +78,7 @@ class OfferDetailAPIView(APIView):
         serializer = OfferSerializer(offer)
         return Response(serializer.data)
 
-    def put(self, request, pk):
+    def patch(self, request, pk):
         offer = self.get_object(pk)
         serializer = OfferSerializer(offer, data=request.data, partial=True)
         if serializer.is_valid():
