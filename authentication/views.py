@@ -10,7 +10,7 @@ from rest_framework import viewsets
 
 from .models import User, Provider
 from .serializers import (RegisterSerializer,
-                          LoginSerializer, VerifyCodeSerializer, UserSerializer, ProviderSerializer,
+                          LoginSerializer, UserSerializer, ProviderSerializer,
                           UserProfileSerializer)
 
 
@@ -24,7 +24,7 @@ class RegisterUserAPIView(APIView):
         if serializer.is_valid():
             user = serializer.save()
 
-            send_verification_email(user)
+            #send_verification_email(user)
             return Response({
                 'message':'Usuario creado exitosamente',
                 'email': user.email,
@@ -71,7 +71,7 @@ class UpdateUserAPIView(APIView):
 
 
 
-
+"""
 class VerifyCodeAPIView(APIView):
     def post(self, request):
         serializer = VerifyCodeSerializer(data=request.data)
@@ -79,7 +79,7 @@ class VerifyCodeAPIView(APIView):
             serializer.save()
             return Response({"message": "Código verificado correctamente"}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+"""
 
 
 class UserProfileUpdateView(APIView):

@@ -14,7 +14,7 @@ import json
 
 from authentication.serializers import UserSerializer
 
-
+"""
 class UserProfileAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -47,11 +47,13 @@ class UserProfileAPIView(APIView):
 
 
     def patch(self, request):
-        """
-        Actualiza la información del perfil (customer o provider),
-        incluyendo dirección si corresponde.
-        """
+
         user = request.user
+        profile_data = request.data.copy()
+        
+        if 'profile_image' in request.FILES:
+            user.profile_image = request.FILES['profile_image']
+            user.save()
 
         # Determinar perfil
         try:
@@ -99,6 +101,7 @@ class UserProfileAPIView(APIView):
 
         # Manejo de otros datos
         profile_data = request.data.copy()
+        profile_data.update(request.FILES)  # incluir archivos (foto, etc)
         profile_data.pop("address", None)
 
         if serializer_class:
@@ -122,6 +125,113 @@ class UserProfileAPIView(APIView):
                     "address": AddressSerializer(profile.address).data if profile.address else None
                 }
             }, status=200)
+"""
+
+# profiles/views.py
+class UserProfileAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        role = None
+        profile_data = None
+
+        if hasattr(user, "provider"):
+            role = "provider"
+            serializer = ProviderProfileSerializer(user.provider, context={'request': request})
+            profile_data = serializer.data
+        elif hasattr(user, "customer"):
+            role = "customer"
+            serializer = CustomerProfileSerializer(user.customer, context={'request': request})
+            profile_data = serializer.data
+        else:
+            return Response({"error": "El usuario no tiene perfil asociado"}, status=400)
+
+        user_serializer = UserSerializer(user, context={'request': request})
+
+        return Response({
+            "role": role,
+            "user": user_serializer.data,
+            "profile": profile_data
+        })
+
+    def patch(self, request):
+        user = request.user
+        profile_data = request.data.copy()
+
+        # Guardar imagen directamente en user
+        if 'profile_image' in request.FILES:
+            user.profile_image = request.FILES['profile_image']
+            user.save()
+
+        # Manejo de Provider
+        if hasattr(user, "provider"):
+            profile = user.provider
+            serializer_class = ProviderProfileUpdateSerializer
+            # Manejo de address
+            address_data_str = request.data.get("address")
+            if address_data_str:
+                try:
+                    address_data = json.loads(address_data_str)
+                except json.JSONDecodeError:
+                    return Response({'address': 'Formato de dirección inválido'}, status=400)
+                if address_data:
+                    if profile.address:
+                        addr_serializer = AddressSerializer(profile.address, data=address_data, partial=True)
+                    else:
+                        addr_serializer = AddressSerializer(data=address_data)
+                    addr_serializer.is_valid(raise_exception=True)
+                    addr_instance = addr_serializer.save()
+                    profile.address = addr_instance
+                    profile.save()
+
+            # Guardar resto de campos en Provider
+            profile_data.pop('address', None)
+            profile_data.pop('profile_image', None)  # ya lo guardamos en User
+            serializer = serializer_class(profile, data=profile_data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            profile_serializer = ProviderProfileSerializer(profile, context={'request': request})
+            user_serializer = UserSerializer(user, context={'request': request})
+            return Response({
+                "message": "Perfil actualizado correctamente",
+                "role": "provider",
+                "user": user_serializer.data,
+                "profile": profile_serializer.data
+            }, status=200)
+
+        # Caso customer
+        elif hasattr(user, "customer"):
+            # Solo address si aplica
+            customer = user.customer
+            address_data_str = request.data.get("address")
+            if address_data_str:
+                try:
+                    address_data = json.loads(address_data_str)
+                    if address_data:
+                        if customer.address:
+                            addr_serializer = AddressSerializer(customer.address, data=address_data, partial=True)
+                        else:
+                            addr_serializer = AddressSerializer(data=address_data)
+                        addr_serializer.is_valid(raise_exception=True)
+                        addr_instance = addr_serializer.save()
+                        customer.address = addr_instance
+                        customer.save()
+                except json.JSONDecodeError:
+                    return Response({'address': 'Formato de dirección inválido'}, status=400)
+
+            customer_serializer = CustomerProfileSerializer(customer, context={'request': request})
+            user_serializer = UserSerializer(user, context={'request': request})
+            return Response({
+                "message": "Perfil actualizado correctamente",
+                "role": "customer",
+                "user": user_serializer.data,
+                "profile": customer_serializer.data
+            }, status=200)
+
+        return Response({"error": "No se pudo actualizar el perfil"}, status=400)
+
+            
 
 class ProfileDetailAPIView(APIView):
     permission_classes = [IsAuthenticated]

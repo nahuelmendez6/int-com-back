@@ -38,7 +38,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             password=password,
             name=validated_data['name'],
             lastname=validated_data['lastname'],
-            is_active=False  # para verificación por código
+            is_active=True
         )
 
         # Asociar al tipo de perfil correspondiente
@@ -93,7 +93,7 @@ class LoginSerializer(serializers.Serializer):
             "email": user.email,
         }
 
-
+"""
 class VerifyCodeSerializer(serializers.Serializer):
 
     email = serializers.EmailField()
@@ -131,7 +131,7 @@ class VerifyCodeSerializer(serializers.Serializer):
         self.user.save()
 
         return self.user
-
+"""
 
 class UserSerializer(serializers.ModelSerializer):
 

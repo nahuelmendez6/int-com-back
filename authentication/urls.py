@@ -6,7 +6,6 @@ from rest_framework.routers import DefaultRouter
 from .views import (RegisterUserAPIView,
                     UpdateUserAPIView,
                     LoginAPIView,
-                    VerifyCodeAPIView,
                     UserViewSet,
                     UserProfileUpdateView)
 
@@ -20,7 +19,7 @@ urlpatterns = [
 
     path('update-user/', UpdateUserAPIView.as_view(), name='update-user'),
 
-    path('verify-code/', VerifyCodeAPIView.as_view(), name='verify-code'),
+    #path('verify-code/', VerifyCodeAPIView.as_view(), name='verify-code'),
 
     path('profile-picture/update/', UserProfileUpdateView.as_view(), name='profile-update'),
 
