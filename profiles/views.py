@@ -10,7 +10,7 @@ from .serializers import (
     CategorySerializer, TypeProviderSerializer, ProfessionSerializer, ProfileSerializer, ProviderProfileSerializer,
     ProviderProfileUpdateSerializer, CustomerProfileSerializer
 )
-
+import json
 
 from authentication.serializers import UserSerializer
 
@@ -69,7 +69,14 @@ class UserProfileAPIView(APIView):
             return Response({"error": "El perfil no existe en BD"}, status=404)
 
         # Manejo de dirección
-        address_data = request.data.get("address")
+        #address_data = request.data.get("address")
+        address_data_str = request.data.get("address")
+        address_data = None
+        if address_data_str:
+            try:
+                address_data = json.loads(address_data_str)
+            except json.JSONDecodeError:
+                return Response({'address': 'Formato de dirección inválido'}, status=status.HTTP_400_BAD_REQUEST)
         if address_data:
             address_id = address_data.get("id_address")
             if address_id:
