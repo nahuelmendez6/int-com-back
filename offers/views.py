@@ -68,10 +68,20 @@ class OfferListCreateAPIView(APIView):
         
 
     def post(self, request):
-        serializer = OfferSerializer(data=request.data)
+        
+        provider = Provider.objects.filter(user=request.user).first()
+        if not provider:
+            return Response({"detail": "El usuario no está asociado a ningún proveedor."}, status=400)
+        
+        data = request.data.copy()
+        data['id_provider'] = provider.id_provider
+        data['user_create_id'] = request.user.id_user
+        
+        serializer = OfferSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

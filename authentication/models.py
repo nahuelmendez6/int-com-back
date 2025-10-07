@@ -131,7 +131,6 @@ class ProviderCategory(models.Model):
         db_table = 'n_provider_cateogory'  # escribilo tal como está en la base de datos
         unique_together = ('provider', 'category')
 
-
 class UserVerificationCode(models.Model):
 
     id = models.AutoField(primary_key=True)
@@ -149,3 +148,4 @@ class UserVerificationCode(models.Model):
 
     def __str__(self):
         return f"Código {self.code} para {self.user.email}"
+

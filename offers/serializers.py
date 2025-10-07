@@ -12,4 +12,4 @@ class OfferSerializer(serializers.ModelSerializer):
     class Meta:
         model = Offer
         fields = "__all__"
-        read_only_fields = ["offer_id", "date_create", "date_update", "is_deleted"]
+        read_only_fields = ["offer_id", "date_create", "date_update"]
