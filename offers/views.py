@@ -4,7 +4,7 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from .models import TypeOffer, Offer
 from .serializers import TypeOfferSerializer, OfferSerializer
-
+from authentication.models import Provider
 
 class TypeOfferListCreateAPIView(APIView):
     """
@@ -54,9 +54,18 @@ class OfferListCreateAPIView(APIView):
     Listar y crear Offers (solo las que no están soft-deleted)
     """
     def get(self, request):
-        offers = Offer.objects.all()  # gracias al Manager, excluye is_deleted=True
+        
+        user = request.user
+        provider = Provider.objects.filter(user=user).first()
+
+        id_provider = provider.id_provider
+        if id_provider is None:
+             return Response({"detail": "No se pudo obtener el proveedor logueado."}, status=400)
+        
+        offers = Offer.objects.filter(id_provider=id_provider)  # ya excluye is_deleted=True gracias al Manager
         serializer = OfferSerializer(offers, many=True)
         return Response(serializer.data)
+        
 
     def post(self, request):
         serializer = OfferSerializer(data=request.data)

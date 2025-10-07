@@ -10,6 +10,6 @@ urlpatterns = [
     path('type-offers/<int:pk>/', TypeOfferDetailAPIView.as_view(), name='typeoffer-detail'),
 
     # Offer
-    path('offers/', OfferListCreateAPIView.as_view(), name='offer-list-create'),
+    path('', OfferListCreateAPIView.as_view(), name='offer-list-create'),
     path('offers/<int:pk>/', OfferDetailAPIView.as_view(), name='offer-detail'),
 ]
