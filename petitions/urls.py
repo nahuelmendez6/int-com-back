@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import PetitionAPIView, TypePetitionAPIView
+from .views import PetitionAPIView, TypePetitionAPIView, ProviderPetitionsFeedAPIView
 
 urlpatterns = [
 
@@ -12,5 +12,8 @@ urlpatterns = [
 
     # URL para consumo de TypePetition
     path('type-petitions/', TypePetitionAPIView.as_view(), name='type-petition'),
+
+    # URL para filtro de peticiones
+    path('provider-feed/', ProviderPetitionsFeedAPIView.as_view(), name='provider-petitions-feed'),
 ]
 

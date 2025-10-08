@@ -185,7 +185,8 @@ class ProviderPetitionsFeedAPIView(APIView):
         user = request.user
         
         try:
-            provider = Provider.objects.filter(id_user=user.id_user).first()
+            provider = Provider.objects.filter(user=request.user).first()
+
         except Provider.DoesNotExist:
             return Response({'detail':'El usuario no es un proveedor'}, status=status.HTTP_403_FORBIDDEN)
 
