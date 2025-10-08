@@ -4,6 +4,20 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 
 from .services import filter_petitions_for_provider
+import json
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+
+from django.shortcuts import get_object_or_404
+from .models import Petition, PetitionCategory, PetitionAttachment, PetitionMaterial
+from .serializers import PetitionSerializer
+
+from authentication.models import Provider
+
+
+from .services import filter_petitions_for_provider
 
 from .models import (Petition,
                       PetitionAttachment,
@@ -34,13 +48,7 @@ class TypePetitionAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-import json
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from django.shortcuts import get_object_or_404
-from .models import Petition, PetitionCategory, PetitionAttachment, PetitionMaterial
-from .serializers import PetitionSerializer
+
 
 class PetitionAPIView(APIView):
     """
@@ -167,3 +175,21 @@ class PetitionAPIView(APIView):
             return Response(PetitionSerializer(petition).data, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ProviderPetitionsFeedAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+
+        user = request.user
+        
+        try:
+            provider = Provider.objects.filter(id_user=user.id_user).first()
+        except Provider.DoesNotExist:
+            return Response({'detail':'El usuario no es un proveedor'}, status=status.HTTP_403_FORBIDDEN)
+
+        petitions = filter_petitions_for_provider(provider)
+        serializer = PetitionSerializer(petitions, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
