@@ -73,3 +73,39 @@ class ProviderCityViewSet(viewsets.ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
+    @action(detail=False, methods=['patch'], url_path='sync')
+    def sync_cities(self, request, *args, **kwargs):
+        """
+                Sincroniza las ciudades de un provider:
+                - Recibe { "provider": id, "cities": [1,2,3] }
+                - Borra las que ya no están
+                - Crea las nuevas
+        """
+        provider_id = request.data.get("provider")
+        cities = request.data.get("cities", [])
+
+        if not provider_id:
+            return Response({"error":"provider es requerido"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        # Traer las ciudades actuales
+
+        current = ProviderCity.objects.filter(provider_id=provider_id).values_list("city_id", flat=True)
+
+        # Determinar las que hay que borrar y las que hay que crear
+        to_delete = set(current) - set(cities)
+        to_add = set(cities) - set(current)
+
+        # Borrar las que ya no están
+        if to_delete:
+            ProviderCity.objects.filter(provider_id=provider_id, city_id__in=to_delete).delete()
+
+        # Crear las nuevas
+        new_objs = [ProviderCity(provider_id=provider_id, city_id=cid) for cid in to_add]
+        ProviderCity.objects.bulk_create(new_objs, ignore_conflicts=True)
+
+        # Devolver estado actual
+        qs = ProviderCity.objects.filter(provider_id=provider_id)
+        serializer = self.get_serializer(qs, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
