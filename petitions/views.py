@@ -120,7 +120,7 @@ class PetitionAPIView(APIView):
                 )
 
             return Response(PetitionSerializer(petition).data, status=status.HTTP_201_CREATED)
-
+        print('errores del serializador ', serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
