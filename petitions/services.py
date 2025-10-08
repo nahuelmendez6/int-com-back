@@ -1,25 +1,29 @@
-from django.db.models import Q
+from django.db.models import Q, Subquery
 from .models import Petition
+from authentication.models import Customer, Provider
 
 def filter_petitions_for_provider(provider):
+    qs = Petition.objects.filter(is_deleted=False)
 
-    qs = Petition.objects.all()
-
-    # Filtrar por profesión del proveedor o peticiones sin profesion
+    # Profesión (opcional)
     qs = qs.filter(
         Q(id_profession=provider.profession) | Q(id_profession__isnull=True)
     )
 
-    # Filtrar por categorias
-    provider_categories = provider.categories.values_list('id', flat=True)
-    if provider_categories.exists():
-        qs = qs.filter(petitioncategory__id_category__in=provider_categories)
+    # Tipo de proveedor (opcional)
+    qs = qs.filter(
+        Q(id_type_provider=provider.type_provider) | Q(id_type_provider__isnull=True)
+    )
 
+    # Categorías
+    if provider.categories.exists():
+        qs = qs.filter(categories__in=provider.categories.all())
 
-    # Filtrar por zona (ciudad del cliente en las ciudades del proveedor)
-    provider_cities = provider.cities.values_list('id_city', flat=True)
-    if provider_cities.exists():
-        qs = qs.filter(id_customer__address__city__id_city__in=provider_cities)
-
+    # Zonas (ciudades del proveedor)
+    if provider.cities.exists():
+        customer_ids = Customer.objects.filter(
+            address__city__in=provider.cities.all()
+        ).values('id_customer')
+        qs = qs.filter(id_customer__in=Subquery(customer_ids))
 
     return qs.distinct()
