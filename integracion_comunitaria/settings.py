@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'availability',
     'petitions',
     'offers',
+    'interest',
 
 ]
 
