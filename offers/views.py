@@ -2,9 +2,12 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
+from rest_framework.permissions import IsAuthenticated
 from .models import TypeOffer, Offer
 from .serializers import TypeOfferSerializer, OfferSerializer
-from authentication.models import Provider
+from authentication.models import Provider, Customer
+
+from .services import filter_offers_for_customer_by_city_interest
 
 class TypeOfferListCreateAPIView(APIView):
     """
@@ -111,3 +114,26 @@ class OfferDetailAPIView(APIView):
         return Response({"detail": "Offer deleted (soft delete)."}, status=status.HTTP_204_NO_CONTENT)
 
 
+
+
+class CustomerOfferFeedAPIView(APIView):
+
+    """
+    Listar ofertas filtradas para cliente
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+
+        user = request.user
+        
+        try:
+            customer = Customer.objects.filter(user=user).first()
+        except Customer.DoesNotExist:
+            return Response({'detail':'El usuario no es un cliente'}, status=status.HTTP_403_FORBIDDEN)
+        
+        # aplicamos filtro
+        offers  = filter_offers_for_customer_by_city_interest(customer)
+        serializer = OfferSerializer(offers, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
