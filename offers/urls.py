@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import (
     TypeOfferListCreateAPIView, TypeOfferDetailAPIView,
-    OfferListCreateAPIView, OfferDetailAPIView
+    OfferListCreateAPIView, OfferDetailAPIView, CustomerOfferFeedAPIView
 )
 
 urlpatterns = [
@@ -12,4 +12,7 @@ urlpatterns = [
     # Offer
     path('', OfferListCreateAPIView.as_view(), name='offer-list-create'),
     path('<int:pk>/', OfferDetailAPIView.as_view(), name='offer-detail'),
+
+    # Filtro de ofertas para cliente
+    path('customer-feed/', CustomerOfferFeedAPIView.as_view(), name='customer-offers-feed'),
 ]
