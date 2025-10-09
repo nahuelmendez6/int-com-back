@@ -35,3 +35,9 @@ class InterestAPIView(APIView):
             return Response(InterestSerializer(interest).data, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+    def delete(self, request, pk):
+        interest = get_object_or_404(Interest, pk=pk, is_deleted=False)
+        interest.delete()  # usa método soft delete
+        return Response({"detail": "Interest eliminado (soft delete)"}, status=status.HTTP_204_NO_CONTENT)
