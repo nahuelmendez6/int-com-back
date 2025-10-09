@@ -3,7 +3,7 @@ from django.db import models
 class Interest(models.Model):
     id_interest = models.AutoField(primary_key=True)
     id_customer = models.ForeignKey(
-        'Customer',
+        'authentication.Customer',
         on_delete=models.PROTECT,
         db_column='id_customer'
     )
