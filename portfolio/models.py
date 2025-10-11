@@ -65,3 +65,20 @@ class PortfolioAttachment(models.Model):
 
     def __str__(self):
         return f"Attachment {self.id_portfolio_attachment} for Portfolio {self.id_portfolio_id}"
+    
+
+
+class Material(models.Model):
+    id_material = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=100)
+    id_provider = models.IntegerField()  # FK a n_provider
+    unit_price = models.DecimalField(max_digits=15, decimal_places=2)
+    unit = models.CharField(max_length=20, default='unidad')
+    description = models.CharField(max_length=255, null=True, blank=True)
+
+    class Meta:
+        db_table = 'n_material'
+        managed = False
+
+    def __str__(self):
+        return self.name
