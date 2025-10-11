@@ -14,7 +14,6 @@ class Portfolio(models.Model):
         on_delete=models.CASCADE,
         db_column='id_provider',
         related_name='provider_portfolio',
-        primary_key=True
     )
     id_user_create = models.IntegerField(null=True, blank=True),
     id_user_update = models.IntegerField(null=True, blank=True)

@@ -68,7 +68,7 @@ class PostulationAPIView(APIView):
 
         data = request.data.copy()
         data['id_provider'] = provider.id_provider
-        data['id_user_create'] = request.user.id
+        data['id_user_create'] = request.user.id_user
 
         serializer = PostulationSerializer(data=data)
         if serializer.is_valid():
@@ -93,7 +93,7 @@ class PostulationAPIView(APIView):
             postulation = get_object_or_404(Postulation, pk=pk, id_provider=provider.id_provider)
             serializer = PostulationSerializer(postulation, data=request.data, partial=True)
             if serializer.is_valid():
-                serializer.save(id_user_update=request.user.id)
+                serializer.save(id_user_update=request.user.id_user)
                 return Response(serializer.data, status=status.HTTP_200_OK)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -115,14 +115,14 @@ class PostulationAPIView(APIView):
             new_state = get_object_or_404(PostulationState, pk=new_state_id)
 
             postulation.id_state = new_state
-            postulation.id_user_update = request.user.id
+            postulation.id_user_update = request.user.id_user
             postulation.save(update_fields=["id_state", "id_user_update", "date_update"])
 
             # Registrar historial
             PostulationStateHistory.objects.create(
                 id_postulation=postulation,
                 id_state=new_state,
-                changed_by=request.user.id,
+                changed_by=request.user.id_user,
                 notes=request.data.get("notes", "")
             )
 

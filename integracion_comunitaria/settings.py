@@ -54,6 +54,8 @@ INSTALLED_APPS = [
     'petitions',
     'offers',
     'interest',
+    'postulations',
+    'portfolio',
 
 ]
 
