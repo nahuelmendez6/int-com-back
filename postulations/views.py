@@ -90,5 +90,94 @@ class PostulationAPIView(APIView):
         )
 
 
+    def patch(self, request, pk=None, id_petition=None):
+        provider = getattr(request.user, 'provider', None)
+        customer = getattr(request.user, 'customer', None)
+
+        # --- Validación base ---
+        if not pk:
+            return Response(
+                {"detail": "Debe especificar el ID de la postulación a actualizar."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # ------------------------------
+        # CASO: PROVEEDOR (puede editar su postulación completa)
+        # ------------------------------
+        if provider:
+            postulation = get_object_or_404(Postulation, pk=pk, id_provider=provider.id_provider)
+
+            serializer = PostulationSerializer(
+                postulation,
+                data=request.data,
+                partial=True
+            )
+
+            if serializer.is_valid():
+                serializer.save(id_user_update=request.user.id)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        # ------------------------------
+        # CASO: CLIENTE (solo puede cambiar el estado de la postulación)
+        # ------------------------------
+        elif customer:
+            if not id_petition:
+                return Response(
+                    {"detail": "Debe especificar una petición (id_petition)."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Verificamos que la petición pertenezca al cliente
+            petition = get_object_or_404(
+                Petition,
+                pk=id_petition,
+                id_customer=customer.id_customer
+            )
+
+            # Traemos la postulación que pertenece a esa petición
+            postulation = get_object_or_404(
+                Postulation,
+                pk=pk,
+                id_petition=id_petition
+            )
+
+            # El cliente solo puede actualizar el campo de estado (id_state)
+            new_state_id = request.data.get("id_state")
+
+            if not new_state_id:
+                return Response(
+                    {"detail": "Debe proporcionar un nuevo estado (id_state)."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            new_state = get_object_or_404(PostulationState, pk=new_state_id)
+
+            # Guardamos el nuevo estado
+            postulation.id_state = new_state
+            postulation.id_user_update = request.user.id
+            postulation.save(update_fields=["id_state", "id_user_update", "date_update"])
+
+            # Registramos en el historial
+            PostulationStateHistory.objects.create(
+                id_postulation=postulation,
+                id_state=new_state,
+                changed_by=request.user.id,
+                notes=request.data.get("notes", "")
+            )
+
+            return Response(
+                {"detail": f"Estado actualizado a '{new_state.name}'."},
+                status=status.HTTP_200_OK
+            )
+
+        # ------------------------------
+        # CASO: USUARIO SIN ROL VÁLIDO
+        # ------------------------------
+        return Response(
+            {"detail": "El usuario no tiene un rol válido (ni provider ni customer)."},
+            status=status.HTTP_403_FORBIDDEN
+        )
 
 
