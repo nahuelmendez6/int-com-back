@@ -60,6 +60,16 @@ class PostulationSerializer(serializers.ModelSerializer):
             'materials'
         ]
 
+    def validate(self, data):
+        # validar que un porveedor solo pueda postular una vez por petición
+        id_petition = data.get('id_petition')
+        id_provider = data.get('id_provider')
+
+        if Postulation.objects.filter(id_petition=id_petition, id_provider=id_provider).exists():
+            raise serializers.ValidationError(
+                "El proveedor ya ha postulado a esta petición."
+            )
+
     def create(self, validated_data):
         budgets_data = validated_data.pop('budgets', [])
         materials_data = validated_data.pop('materials', [])
