@@ -1,39 +1,19 @@
 from rest_framework import serializers
 from .models import (
-    PostulationState,
     Postulation,
     PostulationBudget,
-    PostulationStateHistory,
     PostulationMaterial,
+    PostulationState
 )
-from portfolio.models import Material  # según tu import
 
-
-# ---------- ESTADOS DE POSTULACIÓN ----------
-class PostulationStateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PostulationState
-        fields = ['id_state', 'name', 'description']
-
-
-# ---------- MATERIALES ----------
-class MaterialSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Material
-        fields = ['id_material', 'name', 'unit_price', 'unit', 'description']
-
-
-# ---------- PRESUPUESTOS ----------
 class PostulationBudgetSerializer(serializers.ModelSerializer):
-    cost_type_display = serializers.CharField(source='get_cost_type_display', read_only=True)
+    id_budget = serializers.IntegerField(required=False)
 
     class Meta:
         model = PostulationBudget
         fields = [
             'id_budget',
-            'id_postulation',
             'cost_type',
-            'cost_type_display',
             'amount',
             'unit_price',
             'quantity',
@@ -41,51 +21,26 @@ class PostulationBudgetSerializer(serializers.ModelSerializer):
             'item_description',
             'notes',
             'date_created',
-            'id_user_create',
+            'id_user_create'
         ]
 
-
-# ---------- HISTORIAL DE ESTADOS ----------
-class PostulationStateHistorySerializer(serializers.ModelSerializer):
-    state = PostulationStateSerializer(source='id_state', read_only=True)
-
-    class Meta:
-        model = PostulationStateHistory
-        fields = [
-            'id_history',
-            'id_postulation',
-            'id_state',
-            'state',
-            'changed_by',
-            'notes',
-            'date_change',
-        ]
-
-
-# ---------- MATERIALES ASOCIADOS ----------
 class PostulationMaterialSerializer(serializers.ModelSerializer):
-    material = MaterialSerializer(source='id_material', read_only=True)
+    id_postulation_material = serializers.IntegerField(required=False)
 
     class Meta:
         model = PostulationMaterial
         fields = [
             'id_postulation_material',
-            'id_postulation',
             'id_material',
-            'material',
             'quantity',
             'unit_price',
             'total',
-            'notes',
+            'notes'
         ]
 
-
-# ---------- POSTULACIÓN PRINCIPAL ----------
 class PostulationSerializer(serializers.ModelSerializer):
-    state = PostulationStateSerializer(source='id_state', read_only=True)
-    budgets = PostulationBudgetSerializer(source='postulationbudget_set', many=True, read_only=True)
-    materials = PostulationMaterialSerializer(source='postulationmaterial_set', many=True, read_only=True)
-    history = PostulationStateHistorySerializer(source='postulationstatehistory_set', many=True, read_only=True)
+    budgets = PostulationBudgetSerializer(many=True, required=False)
+    materials = PostulationMaterialSerializer(many=True, required=False)
 
     class Meta:
         model = Postulation
@@ -96,13 +51,62 @@ class PostulationSerializer(serializers.ModelSerializer):
             'winner',
             'proposal',
             'id_state',
-            'state',
             'current',
             'id_user_create',
             'id_user_update',
             'date_create',
             'date_update',
             'budgets',
-            'materials',
-            'history',
+            'materials'
         ]
+
+    def create(self, validated_data):
+        budgets_data = validated_data.pop('budgets', [])
+        materials_data = validated_data.pop('materials', [])
+
+        postulation = Postulation.objects.create(**validated_data)
+
+        # Crear presupuestos
+        for budget in budgets_data:
+            PostulationBudget.objects.create(id_postulation=postulation, **budget)
+
+        # Crear materiales
+        for material in materials_data:
+            PostulationMaterial.objects.create(id_postulation=postulation, **material)
+
+        return postulation
+
+    def update(self, instance, validated_data):
+        budgets_data = validated_data.pop('budgets', [])
+        materials_data = validated_data.pop('materials', [])
+
+        # Actualizamos campos de la postulación
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        # Actualizar/crear presupuestos
+        for budget in budgets_data:
+            budget_id = budget.get('id_budget', None)
+            if budget_id:
+                budget_obj = PostulationBudget.objects.get(pk=budget_id, id_postulation=instance)
+                for attr, value in budget.items():
+                    if attr != 'id_budget':
+                        setattr(budget_obj, attr, value)
+                budget_obj.save()
+            else:
+                PostulationBudget.objects.create(id_postulation=instance, **budget)
+
+        # Actualizar/crear materiales
+        for material in materials_data:
+            material_id = material.get('id_postulation_material', None)
+            if material_id:
+                material_obj = PostulationMaterial.objects.get(pk=material_id, id_postulation=instance)
+                for attr, value in material.items():
+                    if attr != 'id_postulation_material':
+                        setattr(material_obj, attr, value)
+                material_obj.save()
+            else:
+                PostulationMaterial.objects.create(id_postulation=instance, **material)
+
+        return instance
