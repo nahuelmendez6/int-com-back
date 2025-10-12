@@ -83,7 +83,7 @@ class PostulationAPIView(APIView):
     def patch(self, request, pk=None, id_petition=None):
         provider = getattr(request.user, 'provider', None)
         customer = getattr(request.user, 'customer', None)
-
+        print(request.data)
         if not pk:
             return Response({"detail": "Debe especificar el ID de la postulación."},
                             status=status.HTTP_400_BAD_REQUEST)
@@ -99,34 +99,34 @@ class PostulationAPIView(APIView):
 
         # --- Cliente: solo puede actualizar el estado ---
         elif customer:
-            if not id_petition:
-                return Response({"detail": "Debe especificar id_petition."}, status=status.HTTP_400_BAD_REQUEST)
+            # lee id_petition del body de la solicitud
+            id_petition = request.data.get('id_petition')
 
-            # Validamos que la petición sea del cliente
+            if not id_petition:
+                return Response({"detail": "Debe especificar id_petition en el cuerpo de la solicitud."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # validamos que la peticion sea del cliente
             petition = get_object_or_404(Petition, pk=id_petition, id_customer=customer.id_customer)
 
             postulation = get_object_or_404(Postulation, pk=pk, id_petition=id_petition)
 
-            new_state_id = request.data.get("id_state")
+            new_state_id = request.data.get('id_state')
             if not new_state_id:
-                return Response({"detail": "Debe proporcionar un nuevo estado (id_state)."},
-                                status=status.HTTP_400_BAD_REQUEST)
+                return Response({"detail": "Debe especificar id_state en el cuerpo de la solicitud."}, status=status.HTTP_400_BAD_REQUEST)
 
             new_state = get_object_or_404(PostulationState, pk=new_state_id)
-
             postulation.id_state = new_state
             postulation.id_user_update = request.user.id_user
-            postulation.save(update_fields=["id_state", "id_user_update", "date_update"])
+            postulation.save(update_fields=["id_state", "id_user_update","date_update"])
 
             # Registrar historial
             PostulationStateHistory.objects.create(
                 id_postulation=postulation,
-                id_state=new_state,
-                changed_by=request.user.id_user,
-                notes=request.data.get("notes", "")
+                id_state=new_state
             )
 
-            return Response({"detail": f"Estado actualizado a '{new_state.name}'."}, status=status.HTTP_200_OK)
+            return Response({"detail": f"Estado actualizado a '{new_state.name}'."},
+      status=status.HTTP_200_OK)
 
         # Usuario sin rol válido
         return Response({"detail": "Usuario no válido."}, status=status.HTTP_403_FORBIDDEN)

@@ -62,6 +62,10 @@ class PostulationSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         # validar que un porveedor solo pueda postular una vez por petición
+        
+        if self.instance:
+            return data  # Si es una actualización, no validamos esto
+        
         id_petition = data.get('id_petition')
         id_provider = data.get('id_provider')
 
