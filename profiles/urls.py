@@ -6,6 +6,7 @@ from .views import (
     ProfessionViewSet,
     ProfileStatusAPIView,
     ProfileDetailAPIView,
+    ProfileUserDetailAPIView,
     #CustomerProfileAPIView,
     #ProviderProfileAPIView,
     #ProviderProfileUpdateAPIView,
@@ -26,10 +27,7 @@ urlpatterns = [
     path('categories/', CategoryViewSet.as_view({'get': 'list'})),
     path('type-providers/', TypeProviderViewSet.as_view({'get': 'list'})),
     path('professions/', ProfessionViewSet.as_view({'get': 'list'})),
-    #path('customer-profile/', CustomerProfileAPIView.as_view()),
-    #path('provider-profile/', ProviderProfileAPIView.as_view()),
-    #path('provider-profile/update/', ProviderProfileUpdateAPIView.as_view()),
-    #path('customer-profile/update/', CustomerProfileUpdateAPIView.as_view()),
+    path('user-detail/', ProfileUserDetailAPIView.as_view()),
 
     path('user/', UserProfileAPIView.as_view()),
 ]
