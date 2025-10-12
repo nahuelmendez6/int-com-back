@@ -70,7 +70,8 @@ class PostulationBudget(models.Model):
     id_postulation = models.ForeignKey(
         Postulation,
         on_delete=models.CASCADE,
-        db_column='id_postulation'
+        db_column='id_postulation',
+        related_name='budgets'
     )
     cost_type = models.CharField(max_length=20, choices=COST_TYPE_CHOICES, default='por_proyecto')
     amount = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
@@ -125,7 +126,8 @@ class PostulationMaterial(models.Model):
     id_postulation = models.ForeignKey(
         Postulation,
         on_delete=models.CASCADE,
-        db_column='id_postulation'
+        db_column='id_postulation',
+        related_name='materials'
     )
     id_material = models.ForeignKey(
         Material,

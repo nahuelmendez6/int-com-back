@@ -122,3 +122,12 @@ class PostulationSerializer(serializers.ModelSerializer):
                 PostulationMaterial.objects.create(id_postulation=instance, **material)
 
         return instance
+
+
+class PostulationReadSerializer(serializers.ModelSerializer):
+    budgets = PostulationBudgetSerializer(many=True, read_only=True)
+    materials = PostulationMaterialSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Postulation
+        fields = '__all__'
