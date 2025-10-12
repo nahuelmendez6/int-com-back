@@ -70,6 +70,8 @@ class PostulationSerializer(serializers.ModelSerializer):
                 "El proveedor ya ha postulado a esta petición."
             )
 
+        return data
+
     def create(self, validated_data):
         budgets_data = validated_data.pop('budgets', [])
         materials_data = validated_data.pop('materials', [])
