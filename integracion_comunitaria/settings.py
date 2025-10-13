@@ -17,6 +17,9 @@ from pathlib import Path
 
 import os
 
+from datetime import timedelta
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -164,6 +167,11 @@ AUTHENTICATION_BACKENDS = [
 
 SIMPLE_JWT = {
     'USER_ID_FIELD': 'id_user',
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=4),  # duración del access token
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),  # duración del refresh token
+    'ROTATE_REFRESH_TOKENS': True,                # opcional: crea nuevos tokens al refrescar
+    'BLACKLIST_AFTER_ROTATION': True,             # invalida los viejos
+    'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
 CORS_ALLOWED_ORIGINS = [
