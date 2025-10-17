@@ -140,6 +140,30 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id_user', 'name', 'lastname', 'email', 'profile_image']
 
 
+
+class ProviderReadSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+    type_provider = serializers.StringRelatedField()
+    profession = serializers.StringRelatedField()
+    address = serializers.StringRelatedField()
+    categories = serializers.StringRelatedField(many=True)
+    cities = serializers.StringRelatedField()
+
+    class Meta:
+        model = Provider
+        fields = [
+            'id_provider',
+            'user',
+            'type_provider',
+            'profession',
+            'address',
+            'description',
+            'categories',
+            'cities'
+        ]
+
+
+
 class ProviderSerializer(serializers.ModelSerializer):
 
         """

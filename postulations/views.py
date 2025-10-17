@@ -70,7 +70,7 @@ class PostulationAPIView(APIView):
         data['id_provider'] = provider.id_provider
         data['id_user_create'] = request.user.id_user
 
-        serializer = PostulationReadSerializer(data=data)
+        serializer = PostulationSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)

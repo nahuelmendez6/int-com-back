@@ -14,7 +14,7 @@ from .serializers import (
 import json
 
 from authentication.models import User, Customer, Provider
-from authentication.serializers import UserSerializer
+from authentication.serializers import UserSerializer, ProviderReadSerializer
 
 
 # profiles/views.py
@@ -144,12 +144,11 @@ class ProfileUserDetailAPIView(APIView):
         
         if id_customer:
             customer = get_object_or_404(Customer, pk=id_customer)
-            user = customer.user
+            serializer = UserSerializer(customer.user)
         else:
             provider = get_object_or_404(Provider, pk=id_provider)
-            user = provider.user  
+            serializer = ProviderReadSerializer(provider) 
 
-        serializer = UserSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
