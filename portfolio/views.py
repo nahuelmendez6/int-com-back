@@ -74,7 +74,7 @@ class PortfolioAttachmentAPIView(APIView):
     def post(self, request):
         serializer = PortfolioAttachmentSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(id_user_upload=request.user.id)
+            serializer.save(id_user_upload=request.user.id_user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
