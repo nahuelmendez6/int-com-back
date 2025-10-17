@@ -50,7 +50,7 @@ class PortfolioDetailAPIView(APIView):
         portfolio = get_object_or_404(Portfolio, id_portfolio=id_portfolio)
         serializer = PortfolioSerializer(portfolio, data=request.data, partial=True)
         if serializer.is_valid():
-            serializer.save(id_user_update=request.user.id)
+            serializer.save(id_user_update=request.user.id_user)
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     

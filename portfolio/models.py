@@ -19,6 +19,7 @@ class Portfolio(models.Model):
     id_user_update = models.IntegerField(null=True, blank=True)
     date_create = models.DateTimeField(auto_now_add=True)
     date_update = models.DateTimeField(auto_now=True)
+    is_deleted = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'n_portfolio'
@@ -52,6 +53,7 @@ class PortfolioAttachment(models.Model):
     file_size = models.IntegerField(null=True, blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
     id_user_upload = models.IntegerField(null=True, blank=True)
+    is_deleted = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'n_portfolio_attachment'
