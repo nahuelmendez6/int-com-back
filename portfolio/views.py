@@ -27,7 +27,8 @@ class PortfolioAPIView(APIView):
     def post(self, request):
         serializer = PortfolioSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(id_user_create=request.user.id)
+            print(request.user.id_user)
+            serializer.save(id_user_create=request.user.id_user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

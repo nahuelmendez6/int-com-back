@@ -36,5 +36,7 @@ urlpatterns = [
     path('interests/', include('interest.urls')),
 
     path('postulations/', include('postulations.urls')),
+
+    path('portfolios/', include('portfolio.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
  

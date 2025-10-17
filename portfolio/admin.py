@@ -8,4 +8,4 @@ class PortfolioAdmin(admin.ModelAdmin):
 
 @admin.register(PortfolioAttachment)
 class PortfolioAttachmentAdmin(admin.ModelAdmin):
-    list_display = ('id_attachment', 'file_name', 'file_type', 'file_path')
+    list_display = ('id_attachment', 'file', 'file_type')
