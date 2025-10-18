@@ -29,7 +29,9 @@ class CustomerSerializer(serializers.ModelSerializer):
 
 # Serializer para Provider
 class ProviderSerializer(serializers.ModelSerializer):
-    profile_image = serializers.SerializerMethodField()
+    name = serializers.CharField(source='user.name', read_only=True)
+    lastname = serializers.CharField(source='user.lastname', read_only=True)
+    profile_image = serializers.ImageField(source='user.profile_image',read_only=True)
 
     class Meta:
         model = Provider
