@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'interest',
     'postulations',
     'portfolio',
+    'hires',
 
 ]
 
