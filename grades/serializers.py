@@ -7,7 +7,7 @@ from authentication.models import Provider, User
 class GradeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Grade
-        fields = ['id', 'name', 'description', 'value']
+        fields = ['id_grade', 'name', 'description', 'value']
 
 
 # Serializer para Customer / User (quien calificó)
@@ -16,7 +16,7 @@ class CustomerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'profile_image']
+        fields = ['id_user', 'first_name', 'last_name', 'profile_image']
 
     def get_profile_image(self, obj):
         # Maneja ImageField o varchar (ruta)
@@ -33,7 +33,7 @@ class ProviderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Provider
-        fields = ['id', 'name', 'lastname', 'profession', 'profile_image']
+        fields = ['id_provider', 'name', 'lastname', 'profession', 'profile_image']
 
     def get_profile_image(self, obj):
         if obj.user and obj.user.profile_image:
@@ -52,7 +52,7 @@ class GradeProviderSerializer(serializers.ModelSerializer):
     class Meta:
         model = GradeProvider
         fields = [
-            'id',
+            'id_grade_provider',
             'provider',
             'customer',
             'grade',
@@ -62,4 +62,19 @@ class GradeProviderSerializer(serializers.ModelSerializer):
             'is_visible',
             'date_create',
             'date_update',
+        ]
+
+class GradeProviderWriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GradeProvider
+        fields = [
+            'provider',
+            'customer',
+            'grade',
+            'rating',
+            'coment',
+            'response',
+            'is_visible',
+            'user_create',
+            'user_update',
         ]

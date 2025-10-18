@@ -40,5 +40,7 @@ urlpatterns = [
     path('portfolios/', include('portfolio.urls')),
 
     path('api/contrataciones/', include('hires.urls')),
+
+    path('grades/', include('grades.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
  

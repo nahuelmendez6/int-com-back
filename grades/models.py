@@ -2,6 +2,7 @@ from django.db import models
 from authentication.models import Provider, Customer, User
 
 class Grade(models.Model):
+    id_grade = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50)
     description = models.CharField(max_length=255, blank=True, null=True)
     value = models.PositiveSmallIntegerField()  # equivalente a TINYINT
@@ -16,6 +17,7 @@ class Grade(models.Model):
 
 
 class GradeProvider(models.Model):
+    id_grade_provider = models.AutoField(primary_key=True)
     provider = models.ForeignKey(Provider, on_delete=models.CASCADE, db_column='id_provider')
     customer = models.ForeignKey(User, on_delete=models.CASCADE, db_column='id_customer')  # cliente que califica
     grade = models.ForeignKey(Grade, on_delete=models.CASCADE, db_column='id_grade')
