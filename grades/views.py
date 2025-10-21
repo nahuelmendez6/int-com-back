@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status, permissions
 from .models import GradeProvider
 from .serializers import GradeProviderSerializer, GradeProviderWriteSerializer
-
+from django.db import connection
 
 # Listado de calificaciones (GET) y creación (POST)
 class GradeProviderAPIView(APIView):
@@ -69,3 +69,21 @@ class GradeProviderDetailAPIView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ProviderAverageRatingView(APIView):
+    def get(self, request, provider_id):
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT AVG(rating) as avg_rating
+                FROM n_grade_provider
+                WHERE id_provider = %s
+            """, [provider_id])
+            row = cursor.fetchone()  # Solo un resultado
+
+        if row[0] is None:
+            return Response({"id_provider": provider_id, "avg_rating": None})
+        
+        return Response({"id_provider": provider_id, "avg_rating": float(row[0])})
+
+
