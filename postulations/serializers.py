@@ -57,7 +57,8 @@ class PostulationSerializer(serializers.ModelSerializer):
             'date_create',
             'date_update',
             'budgets',
-            'materials'
+            'materials',
+            'is_deleted'
         ]
 
     def validate(self, data):
