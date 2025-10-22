@@ -1,6 +1,9 @@
+from django.utils import timezone
 from django.db import models
+from django.forms import ValidationError
 
 from portfolio.models import Material
+from petitions.models import Petition
 
 class PostulationState(models.Model):
 
@@ -47,6 +50,36 @@ class Postulation(models.Model):
     class Meta:
         db_table = 'n_postulation'
         managed = False
+        
+
+    def clean(self):
+        # Traer a la peticion asociada
+        try:
+            petition = Petition.objects.get(pk=self.id_petition)
+        except Petition.DoesNotExist:
+            raise ValidationError("La peticion asociada no existe.")
+        
+        today = timezone.now().date()
+
+        # validacion de fechas
+        if petition.date_since and today < petition.date_since:
+            raise ValidationError("La postulación aún no está habilitada.")
+        if petition.date_until and today > petition.date_until:
+            raise ValidationError("La postulacion ya cerró.")
+        
+        # validacion de unicidad entre postulaciones activas
+        if Postulation.objects.filter(
+            id_petition=self.id_petition,
+            id_provider=self.id_provider,
+            is_deleted = False
+        ).exists():
+            raise ValidationError("Ya tienes una postulación activa para esta petición.")
+
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
 
     def __str__(self):
         return f'Postulation {self.id_postulation}'
