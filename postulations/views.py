@@ -6,9 +6,12 @@ from django.shortcuts import get_object_or_404
 from .models import (
     Postulation,
     PostulationState,
-    PostulationStateHistory
+    PostulationStateHistory,
+    PostulationMaterial
 )
-from .serializers import PostulationSerializer, PostulationReadSerializer
+from .serializers import (PostulationSerializer, 
+                            PostulationReadSerializer, 
+                            PostulationMaterialSerializer)
 from petitions.models import Petition
 
 
@@ -130,3 +133,107 @@ class PostulationAPIView(APIView):
 
         # Usuario sin rol válido
         return Response({"detail": "Usuario no válido."}, status=status.HTTP_403_FORBIDDEN)
+
+
+class PostulationMaterialAPIVIew(APIView):
+
+    def get(self, request, id_postulation=None):
+        """
+        Listar materiales asociados a una postulacion especifica
+        """
+
+        if not id_postulation:
+            return Response(
+                {"detail":"Debe especificar el ID de la postulacion"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        postulation = get_object_or_404(Postulation, pk=id_postulation)
+        materials = PostulationMaterial.objects.filter(id_postulation=postulation)
+        sealizer = PostulationMaterialSerializer(materials, many=True)
+        return Response(sealizer.data, status=status.HTTP_200_OK)
+    
+    def post(self, request):
+        """
+        Crear un nuevo material asociado a una postulacion
+        """
+        provider = getattr(request.user, 'provider', None)
+        if not provider:
+            return Response({"detail": "Solo los proveedores pueden agregar materiales."},
+                            status=status.HTTP_403_FORBIDDEN)
+        
+        serializer = PostulationMaterialSerializer(data=request.data)
+        if serializer.is_valid():
+            postulation = serializer.validated_data.get("id_postulation")
+
+            # Verificamos que la postulacion pertenezca al proveedor actual
+            if postulation.id_provider != provider.id_provider:
+                return Response({"detail": "No tiene permiso para agregar materiales a esta postulación."},
+                                status=status.HTTP_403_FORBIDDEN)
+            
+        
+            # Calculamos total si no viene del cliente
+            quantity = serializer.validated_data["quantity"]
+            unit_price = serializer.validated_data["unit_price"]
+            serializer.validated_data["total"] = quantity * unit_price
+
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+    def patch(self, request, pk=None):
+        """
+        Actualiza un material específico.
+        """
+        provider = getattr(request.user, 'provider', None)
+        if not provider:
+            return Response({"detail": "Solo los proveedores pueden modificar materiales."},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        if not pk:
+            return Response({"detail": "Debe especificar el ID del material."},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        material = get_object_or_404(PostulationMaterial, pk=pk)
+        postulation = material.id_postulation
+
+        # Verificamos que la postulación sea del proveedor actual
+        if postulation.id_provider != provider.id_provider:
+            return Response({"detail": "No tiene permiso para modificar materiales de esta postulación."},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        serializer = PostulationMaterialSerializer(material, data=request.data, partial=True)
+        if serializer.is_valid():
+            quantity = serializer.validated_data.get("quantity", material.quantity)
+            unit_price = serializer.validated_data.get("unit_price", material.unit_price)
+            serializer.validated_data["total"] = quantity * unit_price
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk=None):
+        """
+        Elimina un material específico de una postulación.
+        """
+        provider = getattr(request.user, 'provider', None)
+        if not provider:
+            return Response({"detail": "Solo los proveedores pueden eliminar materiales."},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        if not pk:
+            return Response({"detail": "Debe especificar el ID del material."},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        material = get_object_or_404(PostulationMaterial, pk=pk)
+        postulation = material.id_postulation
+
+        if postulation.id_provider != provider.id_provider:
+            return Response({"detail": "No tiene permiso para eliminar materiales de esta postulación."},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        material.delete()
+        return Response({"detail": "Material eliminado correctamente."}, status=status.HTTP_204_NO_CONTENT)
+
