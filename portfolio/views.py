@@ -61,6 +61,38 @@ class MaterialAPIView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class MaterialDetailAPIView(APIView):
+
+    def get(self, request, id_material):
+        material = get_object_or_404(Material, id_material=id_material)
+        serializer = MaterialSerializer(material)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    def patch(self, request, id_material):
+        material = get_object_or_404(Material, id_material=id_material)
+        serializer = MaterialSerializer(material, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class MaterialAttachmentDetailAPIView(APIView):
+    """
+    GET: Obtiene un adjunto específico
+    DELETE: Elimina un adjunto
+    """
+
+    def get(self, request, id_material_attachment):
+        attachment = get_object_or_404(MaterialAttachment, id_material_attachment=id_material_attachment)
+        serializer = MaterialAttachmentSerializer(attachment)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def delete(self, request, id_material_attachment):
+        attachment = get_object_or_404(MaterialAttachment, id_material_attachment=id_material_attachment)
+        attachment.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class PortfolioDetailAPIView(APIView):
 

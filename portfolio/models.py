@@ -70,6 +70,7 @@ class Material(models.Model):
     unit_price = models.DecimalField(max_digits=15, decimal_places=2)
     unit = models.CharField(max_length=20, default='unidad')
     description = models.CharField(max_length=255, null=True, blank=True)
+    is_deleted = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'n_material'
