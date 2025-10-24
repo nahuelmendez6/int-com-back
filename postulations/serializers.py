@@ -26,12 +26,14 @@ class PostulationBudgetSerializer(serializers.ModelSerializer):
 
 class PostulationMaterialSerializer(serializers.ModelSerializer):
     id_postulation_material = serializers.IntegerField(required=False)
-
+    total = serializers.DecimalField(max_digits=15, decimal_places=2, read_only=True)
+    material_name = serializers.CharField(source='id_material.name', read_only=True)
     class Meta:
         model = PostulationMaterial
         fields = [
             'id_postulation_material',
             'id_material',
+            'material_name',
             'quantity',
             'unit_price',
             'total',

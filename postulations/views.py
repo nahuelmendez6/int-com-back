@@ -135,7 +135,7 @@ class PostulationAPIView(APIView):
         return Response({"detail": "Usuario no válido."}, status=status.HTTP_403_FORBIDDEN)
 
 
-class PostulationMaterialAPIVIew(APIView):
+class PostulationMaterialAPIView(APIView):
 
     def get(self, request, id_postulation=None):
         """
@@ -171,11 +171,6 @@ class PostulationMaterialAPIVIew(APIView):
                 return Response({"detail": "No tiene permiso para agregar materiales a esta postulación."},
                                 status=status.HTTP_403_FORBIDDEN)
             
-        
-            # Calculamos total si no viene del cliente
-            quantity = serializer.validated_data["quantity"]
-            unit_price = serializer.validated_data["unit_price"]
-            serializer.validated_data["total"] = quantity * unit_price
 
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -208,7 +203,6 @@ class PostulationMaterialAPIVIew(APIView):
         if serializer.is_valid():
             quantity = serializer.validated_data.get("quantity", material.quantity)
             unit_price = serializer.validated_data.get("unit_price", material.unit_price)
-            serializer.validated_data["total"] = quantity * unit_price
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
 
