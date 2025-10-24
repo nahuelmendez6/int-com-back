@@ -72,7 +72,7 @@ class Postulation(models.Model):
             id_petition=self.id_petition,
             id_provider=self.id_provider,
             is_deleted = False
-        ).exists():
+        ).exclude(pk=self.pk).exists():
             raise ValidationError("Ya tienes una postulación activa para esta petición.")
 
 

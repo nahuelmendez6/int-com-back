@@ -3,7 +3,9 @@ from .views import (
     PortfolioAPIView,
     PortfolioDetailAPIView,
     PortfolioAttachmentAPIView,
-    PortfolioAttachmentDetailAPIView
+    PortfolioAttachmentDetailAPIView,
+    MaterialAPIView,
+    MaterialAttachmentAPIView
 )
 
 urlpatterns = [
@@ -11,4 +13,6 @@ urlpatterns = [
     path('<int:id_portfolio>/', PortfolioDetailAPIView.as_view(), name='portfolio-detail'),
     path('attachments/', PortfolioAttachmentAPIView.as_view(), name='attachment-list-create'),
     path('attachments/<int:id_attachment>/', PortfolioAttachmentDetailAPIView.as_view(), name='attachment-detail'),
+    path('materials/', MaterialAPIView.as_view(), name='material'),
+    path('material-attachment/', MaterialAttachmentAPIView.as_view(), name='material-attachment')
 ]

@@ -3,8 +3,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 
-from .models import Portfolio, PortfolioAttachment
-from .serializers import PortfolioSerializer, PortfolioAttachmentSerializer
+from .models import Portfolio, PortfolioAttachment, Material, MaterialAttachment
+from .serializers import PortfolioSerializer, PortfolioAttachmentSerializer, MaterialSerializer, MaterialAttachmentSerializer
 
 
 class PortfolioAPIView(APIView):
@@ -34,6 +34,34 @@ class PortfolioAPIView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class MaterialAPIView(APIView):
+
+    """
+    GET: Lista los materiales de un proveedor
+    POST: Crea materiales
+    """
+    def get(self, request):
+        id_provider = request.query_params.get('id_provider', None)
+        if id_provider:
+            materials = Material.objects.filter(id_provider=id_provider)
+        else:
+            materials = Material.objects.all()
+
+        serializer = MaterialSerializer(materials, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+        
+    
+    def post(self, request):
+        serializer = MaterialSerializer(data=request.data)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
 class PortfolioDetailAPIView(APIView):
 
     """
@@ -54,6 +82,32 @@ class PortfolioDetailAPIView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+
+
+class MaterialAttachmentAPIView(APIView):
+
+    """
+    GET: Lsita los adjuntos
+    POST: Crea adjunto
+    """
+
+    def get(self, request):
+        id_material = request.query_params.get('id_material')
+        if id_material:
+            material_attachments = MaterialAttachment.objects.filter(id_material=id_material)
+        else:
+            material_attachments = MaterialAttachment.objects.all()
+
+        serializer = MaterialAttachmentSerializer(material_attachments, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    def post(self, request):
+        serializer = MaterialAttachmentSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(id_user_upload=request.user.id_user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class PortfolioAttachmentAPIView(APIView):
     """

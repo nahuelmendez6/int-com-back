@@ -77,3 +77,25 @@ class Material(models.Model):
 
     def __str__(self):
         return self.name
+    
+
+class MaterialAttachment(models.Model):
+
+    id_material_attachment = models.AutoField(primary_key=True)
+    id_material = models.ForeignKey(
+        'Material',
+        on_delete=models.CASCADE,
+        db_column='id_material',
+        related_name='material_attachments'
+    )
+    file = models.FileField(upload_to='material_attachments/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    id_user_upload = models.IntegerField(null=True, blank=True)
+    is_deleted = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'n_material_attachment'
+        managed = False  # True si querés que Django maneje la tabla
+
+    def __str__(self):
+        return f"{self.file.name} ({self.file_type})"

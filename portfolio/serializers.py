@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Portfolio, PortfolioAttachment, Material
+from .models import Portfolio, PortfolioAttachment, Material, MaterialAttachment
 
 
 class PortfolioAttachmentSerializer(serializers.ModelSerializer):
@@ -19,4 +19,11 @@ class PortfolioSerializer(serializers.ModelSerializer):
 class MaterialSerializer(serializers.ModelSerializer):
     class Meta:
         model = Material
+        fields = '__all__'
+
+
+class MaterialAttachmentSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = MaterialAttachment
         fields = '__all__'
