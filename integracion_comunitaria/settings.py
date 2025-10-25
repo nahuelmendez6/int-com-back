@@ -49,6 +49,7 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'rest_framework_simplejwt',
+    'channels',
 
     'authentication',
     'locations',
@@ -61,6 +62,7 @@ INSTALLED_APPS = [
     'portfolio',
     'hires',
     'grades',
+    'notifications',
 
 ]
 
