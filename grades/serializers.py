@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Grade, GradeProvider
+from .models import Grade, GradeProvider, GradeCustomer
 from authentication.models import Provider, User
 
 
@@ -64,6 +64,42 @@ class GradeProviderSerializer(serializers.ModelSerializer):
             'is_visible',
             'date_create',
             'date_update',
+        ]
+
+class GradeCustomerSerializer(serializers.ModelSerializer):
+    provider = ProviderSerializer()
+    customer = CustomerSerializer()
+    grade = GradeSerializer()
+
+    class Meta:
+        model = GradeCustomer
+        fields = [
+            'customer',
+            'provider',
+            'grade',
+            'rating',
+            'comment',
+            'response',
+            'is_visible',
+            'user_create',
+            'user_update',
+        ]
+
+
+class GradeCustomerWriteSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = GradeCustomer
+        fields = [
+            'customer',
+            'provider',
+            'grade',
+            'rating',
+            'comment',
+            'response',
+            'is_visible',
+            'user_create',
+            'user_update',
         ]
 
 class GradeProviderWriteSerializer(serializers.ModelSerializer):

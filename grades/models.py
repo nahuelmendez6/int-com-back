@@ -16,6 +16,37 @@ class Grade(models.Model):
         return f"{self.name} ({self.value})"
 
 
+class GradeCustomer(models.Model):
+    id_grade_customer = models.AutoField(primary_key=True)
+    customer = models.ForeignKey(
+        Customer, on_delete=models.CASCADE, db_column='id_customer'
+    )
+    provider = models.ForeignKey(
+        User, on_delete=models.CASCADE, db_column='id_provider'
+    )
+    rating = models.PositiveSmallIntegerField(blank=True, null=True)
+    comment = models.CharField(max_length=255, null=True, blank=True)
+    response = models.CharField(max_length=255, null=True, blank=True)
+    is_visible = models.BooleanField(default=True)
+    user_create = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='gradecustomer_created', db_column='id_user_create'
+    )
+    user_update = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='gradecustomer_updated', db_column='id_user_update'
+    )
+    date_create = models.DateTimeField(auto_now_add=True)
+    date_update = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'n_grade_customer'
+        verbose_name = 'Grade Customer'
+        verbose_name_plural = 'Grade Customers'
+        unique_together = ('provider', 'customer')  # evita duplicados
+        managed = False  # ponelo en True si querés usar makemigrations/migrate
+
+    def __str__(self):
+        return f"Grade {self.rating} for {self.provider} by {self.customer}"
+
 class GradeProvider(models.Model):
     id_grade_provider = models.AutoField(primary_key=True)
     provider = models.ForeignKey(Provider, on_delete=models.CASCADE, db_column='id_provider')
