@@ -1,0 +1,81 @@
+from django.db.models.signals import post_save, pre_save
+from django.dispatch import receiver
+from notifications.services import notification_service
+from .models import Petition
+from authentication.models import Customer, Provider
+
+@receiver(post_save, sender=Petition)
+def notify_on_petition_created(sender, instance, created, **kwargs):
+    """
+    Notificar a los proveedores cuando se crea una nueva petición
+    """
+    if created:
+        # Obtener todos los proveedores que podrían estar interesados
+        # Por ahora, notificamos a todos los proveedores activos
+        providers = Provider.objects.filter(is_active=True)
+        
+        for provider in providers:
+            notification_service.send_notification(
+                user_id=provider.user.id_user,
+                title="Nueva petición disponible",
+                message=f"Se ha publicado una nueva petición: '{instance.title}'",
+                notification_type='general',
+                related_petition_id=instance.id_petition,
+                metadata={
+                    'petition_id': instance.id_petition,
+                    'petition_title': instance.title,
+                    'petition_type': 'new_petition'
+                }
+            )
+
+@receiver(pre_save, sender=Petition)
+def notify_on_petition_closed(sender, instance, **kwargs):
+    """
+    Notificar cuando una petición se cierra
+    """
+    if instance.pk:  # Solo para peticiones existentes
+        try:
+            old_instance = Petition.objects.get(pk=instance.pk)
+            
+            # Verificar si la petición se está cerrando
+            if old_instance.is_active and not instance.is_active:
+                # Notificar al customer
+                customer = Customer.objects.get(id_customer=instance.id_customer)
+                notification_service.send_notification(
+                    user_id=customer.user.id_user,
+                    title="Petición cerrada",
+                    message=f"Tu petición '{instance.title}' ha sido cerrada.",
+                    notification_type='petition_closed',
+                    related_petition_id=instance.id_petition,
+                    metadata={
+                        'petition_id': instance.id_petition,
+                        'petition_title': instance.title,
+                        'closure_reason': 'manual'
+                    }
+                )
+                
+                # Notificar a todos los proveedores que postularon
+                from postulations.models import Postulation
+                postulations = Postulation.objects.filter(
+                    id_petition=instance.id_petition,
+                    is_deleted=False
+                )
+                
+                for postulation in postulations:
+                    provider = Provider.objects.get(id_provider=postulation.id_provider)
+                    notification_service.send_notification(
+                        user_id=provider.user.id_user,
+                        title="Petición cerrada",
+                        message=f"La petición '{instance.title}' en la que postulaste ha sido cerrada.",
+                        notification_type='petition_closed',
+                        related_petition_id=instance.id_petition,
+                        related_postulation_id=postulation.id_postulation,
+                        metadata={
+                            'petition_id': instance.id_petition,
+                            'postulation_id': postulation.id_postulation,
+                            'petition_title': instance.title
+                        }
+                    )
+                    
+        except (Petition.DoesNotExist, Customer.DoesNotExist, Provider.DoesNotExist):
+            return
