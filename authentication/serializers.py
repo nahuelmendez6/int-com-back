@@ -12,8 +12,15 @@ from locations.serializers import AddressSerializer
 from profiles.models import Category, TypeProvider, Profession
 from .models import User, Customer, Provider, UserVerificationCode
 
-
+# ====================================
+# SERIALIZER DE REGISTRO DE USUARIO
+# ====================================
 class RegisterSerializer(serializers.ModelSerializer):
+
+    """
+    Serializer utilizado para el registro de nuevos usuarios.
+    Permite crear tanto clientes como proveedores en base al rol seleccionado.
+    """
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
     name = serializers.CharField()
@@ -25,11 +32,26 @@ class RegisterSerializer(serializers.ModelSerializer):
         fields = ['email', 'password', 'name', 'lastname', 'role']
 
     def validate_role(self, value):
+
+        """
+        Valida que el rol ingresado sea válido ('customer' o 'provider').
+        """
         if value not in ['customer', 'provider']:
             raise serializers.ValidationError('Rol inválido')
         return value
 
     def create(self, validated_data):
+
+        """
+        Crea un usuario con el rol correspondiente (cliente o proveedor).
+        También inicializa su instancia relacionada en el modelo respectivo.
+
+        Args:
+            validated_data (dict): Datos validados del formulario de registro.
+
+        Returns:
+            User: Instancia del usuario creado.
+        """
         role = validated_data.pop('role')
         password = validated_data.pop('password')
 
@@ -53,12 +75,30 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
 
 
-
+# ====================================
+# SERIALIZER DE LOGIN
+# ====================================
 class LoginSerializer(serializers.Serializer):
+
+    """
+    Serializer encargado de manejar la autenticación de usuarios.
+    Verifica credenciales, genera tokens JWT y retorna información del usuario autenticado.
+    """
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
 
     def validate(self, data):
+
+        """
+        Valida las credenciales del usuario y genera los tokens de acceso.
+
+        Raises:
+            serializers.ValidationError: Si las credenciales son inválidas o el usuario está deshabilitado.
+
+        Returns:
+            dict: Datos del usuario autenticado, incluyendo tokens y rol.
+        """
+
         email = data.get('email')
         password = data.get('password')
 
@@ -67,7 +107,7 @@ class LoginSerializer(serializers.Serializer):
         print(f"Password: {password}")
 
         user = authenticate(email=email, password=password)
-        print("🧪 Resultado de authenticate:", user)
+        print("Resultado de authenticate:", user)
 
         if not user:
             raise serializers.ValidationError('Credenciales inválidas.')
@@ -93,55 +133,29 @@ class LoginSerializer(serializers.Serializer):
             "email": user.email,
         }
 
-"""
-class VerifyCodeSerializer(serializers.Serializer):
-
-    email = serializers.EmailField()
-    code = serializers.CharField(max_length=6)
-
-    def validate(self, data):
-        try:
-            user = User.objects.get(email=data['email'])
-        except User.DoesNotExist:
-            raise serializers.ValidationError('Usuario no encontrado')
-
-        code_obj = UserVerificationCode.objects.filter(
-            user=user,
-            code=data['code'],
-            is_used=False
-        ).order_by('-created_at').first()
-
-        if not code_obj:
-            raise serializers.ValidationError("Código inválido o ya usado")
-
-        if timezone.now() > code_obj.created_at + timedelta(minutes=10):
-            raise serializers.ValidationError("Código expirado")
-
-        self.user = user
-        self.code_obj = code_obj
-        return data
-
-    def save(self):
-        # Marcar código como usado
-        self.code_obj.is_used = True
-        self.code_obj.save()
-
-        # Marcar usuario como activo/verificado
-        self.user.is_active = True
-        self.user.save()
-
-        return self.user
-"""
-
+# ====================================
+# SERIALIZER BÁSICO DE USUARIO
+# ====================================
 class UserSerializer(serializers.ModelSerializer):
+
+    """
+    Serializer simplificado para representar información básica del usuario.
+    """
 
     class Meta:
         model = User
         fields = ['id_user', 'name', 'lastname', 'email', 'profile_image']
 
 
-
+# ====================================
+# SERIALIZER DE LECTURA DE PROVEEDOR
+# ====================================
 class ProviderReadSerializer(serializers.ModelSerializer):
+
+    """
+    Serializer utilizado para mostrar la información completa de un proveedor.
+    Incluye relaciones con usuario, categorías, ciudades, profesión, etc.
+    """
     user = UserSerializer()
     type_provider = serializers.StringRelatedField()
     profession = serializers.StringRelatedField()
@@ -163,12 +177,14 @@ class ProviderReadSerializer(serializers.ModelSerializer):
         ]
 
 
-
+# ====================================
+# SERIALIZER DE EDICIÓN / CREACIÓN DE PROVEEDOR
+# ====================================
 class ProviderSerializer(serializers.ModelSerializer):
 
         """
-        Este serilizer se usa para guardar info del proveedor
-
+        Serializer utilizado para la creación o actualización de datos
+        de un proveedor, incluyendo la asociación con categorías.
         """
 
         categories = serializers.PrimaryKeyRelatedField(
@@ -181,7 +197,14 @@ class ProviderSerializer(serializers.ModelSerializer):
             fields = '__all__'
 
 
+# ====================================
+# SERIALIZER DE PERFIL DE USUARIO
+# ====================================
 class UserProfileSerializer(serializers.ModelSerializer):
+    """
+    Serializer que retorna la información del perfil del usuario logueado,
+    incluyendo una URL absoluta de la imagen de perfil.
+    """
     profile_image_url = serializers.SerializerMethodField()
 
     class Meta:

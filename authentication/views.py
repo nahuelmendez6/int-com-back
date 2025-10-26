@@ -16,9 +16,25 @@ from .serializers import (RegisterSerializer,
 
 from .services import send_verification_email
 
+# ====================================
+# API VIEW: REGISTRO DE USUARIO
+# ====================================
 class RegisterUserAPIView(APIView):
+    """
+    Endpoint para registrar nuevos usuarios en el sistema.
+    Soporta tanto clientes como proveedores según el rol proporcionado.
+    """
 
     def post(self, request, *args, **kwargs):
+        """
+        Recibe los datos de registro, valida y crea el usuario.
+        Envía opcionalmente un email de verificación.
+        
+        Returns:
+            Response: Mensaje de éxito o errores de validación.
+        """
+
+
         serializer = RegisterSerializer(data=request.data)
 
         if serializer.is_valid():
@@ -33,7 +49,15 @@ class RegisterUserAPIView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+# ====================================
+# VIEWSET DE USUARIOS
+# ====================================
 class UserViewSet(viewsets.ModelViewSet):
+
+    """
+    ViewSet para gestionar operaciones CRUD de usuarios.
+    Incluye un endpoint adicional para obtener el usuario autenticado.
+    """
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -45,20 +69,32 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-
+# ====================================
+# API VIEW: LOGIN DE USUARIO
+# ====================================
 class LoginAPIView(APIView):
+    """
+    Endpoint para autenticar usuarios y generar tokens de acceso.
+    """
     def post(self, request):
+        """
+        Valida las credenciales enviadas y retorna los tokens JWT
+        junto con información del usuario.
+        """
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
             return Response(serializer.validated_data, status=status.HTTP_200_OK)
         #print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
+# ====================================
+# API VIEW: ACTUALIZACIÓN DE PERFIL DE USUARIO
+# ====================================
 class UpdateUserAPIView(APIView):
 
     """
-    Usamos esta view para gestionar el perfil del usuario
+    View para actualizar información parcial del usuario (PATCH)
+    utilizando el serializer de registro.
     """
 
     def patch(self, request, *args, **kwargs):
@@ -70,23 +106,27 @@ class UpdateUserAPIView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-"""
-class VerifyCodeAPIView(APIView):
-    def post(self, request):
-        serializer = VerifyCodeSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({"message": "Código verificado correctamente"}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-"""
-
-
+# ====================================
+# API VIEW: ACTUALIZACIÓN DE IMAGEN DE PERFIL
+# ====================================
 class UserProfileUpdateView(APIView):
+
+    """
+    Endpoint para actualizar la imagen de perfil del usuario.
+    Requiere autenticación y soporta envío de archivos multipart/form-data.
+    """
+
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]  # DRF lo maneja correctamente
 
     def patch(self, request, *args, **kwargs):
+
+        """
+        Actualiza la foto de perfil del usuario autenticado.
+        
+        Returns:
+            Response: URL absoluta de la nueva imagen de perfil o error si no se envió archivo.
+        """
         user = request.user
         profile_image = request.FILES.get('profile_image')
 

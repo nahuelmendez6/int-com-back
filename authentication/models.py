@@ -3,9 +3,35 @@ from django.contrib.auth.models import AbstractUser, PermissionsMixin, BaseUserM
 
 from profiles.models import Category
 
+
+
+# ==============================
+# GESTOR PERSONALIZADO DE USUARIOS
+# ==============================
 class UserManager(BaseUserManager):
 
+    """
+    Clase que gestiona la creación de usuarios y superusuarios
+    en el modelo personalizado de autenticación.
+    """
+
     def create_user(self, email, password=None, **extra_fields):
+
+        """
+        Crea y guarda un nuevo usuario con email y contraseña.
+
+        Args:
+            email (str): Dirección de correo electrónico del usuario.
+            password (str, optional): Contraseña del usuario.
+            **extra_fields: Campos adicionales del modelo User.
+
+        Raises:
+            ValueError: Si no se proporciona un email.
+
+        Returns:
+            User: Instancia del usuario creado.
+        """
+
         if not email:
             raise ValueError('El email es obligatorio')
         email = self.normalize_email(email)
@@ -15,14 +41,36 @@ class UserManager(BaseUserManager):
         return user
 
     def  create_superuser(self, email, password=None, **extra_fields):
+
+        """
+        Crea y guarda un superusuario del sistema.
+        Se pueden añadir flags adicionales como `is_staff` o `is_superuser`.
+
+        Args:
+            email (str): Dirección de correo electrónico.
+            password (str, optional): Contraseña.
+            **extra_fields: Campos adicionales.
+
+        Returns:
+            User: Instancia del superusuario creado.
+        """
+
         extra_fields.setdefault('enabled', True)
         """
             aca puedo agregar flags: is_staff, is_superuser
         """
         return self.create_user(email, password, **extra_fields)
 
-
+# ==============================
+# MODELO PRINCIPAL DE USUARIO
+# ==============================
 class User(AbstractUser):
+
+    """
+    Modelo personalizado de usuario que reemplaza el sistema de autenticación
+    estándar de Django basado en 'username' por uno basado en 'email'.
+    """
+
 
     id_user = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50)
@@ -55,7 +103,14 @@ class User(AbstractUser):
         return self.email
 
 
+# ==============================
+# MODELO DE CLIENTE
+# ==============================
 class Customer(models.Model):
+
+    """
+    Representa a un usuario con rol de cliente dentro del sistema.
+    """
 
     id_customer = models.AutoField(primary_key=True)
     user = models.OneToOneField(
@@ -76,7 +131,17 @@ class Customer(models.Model):
         return f"Cliente: {self.user.email}"
 
 
+
+# ==============================
+# MODELO DE PROVEEDOR
+# ==============================
 class Provider(models.Model):
+
+    """
+    Representa a un usuario con rol de proveedor dentro del sistema.
+    Incluye vínculos con categorías, profesiones y ubicaciones.
+    """
+
     id_provider = models.AutoField(primary_key=True)
     user = models.OneToOneField(
         'User', on_delete=models.CASCADE, db_column='user_id', related_name='provider'
@@ -122,7 +187,13 @@ class Provider(models.Model):
         ])
 
 
+# ==============================
+# RELACIÓN INTERMEDIA PROVEEDOR-CATEGORÍA
+# ==============================
 class ProviderCategory(models.Model):
+    """
+    Tabla intermedia que relaciona proveedores con categorías.
+    """
     id = models.AutoField(primary_key=True)
     provider = models.ForeignKey(Provider, on_delete=models.CASCADE, db_column='provider_id')
     category = models.ForeignKey(Category, on_delete=models.CASCADE, db_column='category_id')
