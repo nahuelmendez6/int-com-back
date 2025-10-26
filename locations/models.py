@@ -1,6 +1,13 @@
 from django.db import models
 
+
+# ====================================
+# MODELO: PAÍS
+# ====================================
 class Country(models.Model):
+    """
+    Representa un país.
+    """
     id_country = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
 
@@ -11,8 +18,13 @@ class Country(models.Model):
     def __str__(self):
         return self.name
 
-
+# ====================================
+# MODELO: PROVINCIA
+# ====================================
 class Province(models.Model):
+    """
+    Representa una provincia/estado de un país.
+    """
     id_province = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
     country = models.ForeignKey(
@@ -32,8 +44,13 @@ class Province(models.Model):
     def __str__(self):
         return self.name
 
-
+# ====================================
+# MODELO: DEPARTAMENTO
+# ====================================
 class Department(models.Model):
+    """
+    Representa un departamento o distrito dentro de una provincia y país.
+    """
     id_department = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
     province = models.ForeignKey(
@@ -60,7 +77,9 @@ class Department(models.Model):
     def __str__(self):
         return self.name
 
-
+# ====================================
+# MODELO: CIUDAD
+# ====================================
 class City(models.Model):
     id_city = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
@@ -89,8 +108,13 @@ class City(models.Model):
     def __str__(self):
         return f"{self.name} ({self.postal_code})"
 
-
+# ====================================
+# MODELO: DIRECCIÓN
+# ====================================
 class Address(models.Model):
+    """
+    Representa una dirección concreta dentro de una ciudad.
+    """
     id_address = models.AutoField(primary_key=True)
     street = models.CharField(max_length=255, null=True, blank=True)
     number = models.CharField(max_length=10, null=True, blank=True)
@@ -115,7 +139,13 @@ class Address(models.Model):
 
 
 
+# ====================================
+# MODELO: RELACIÓN PROVEEDOR-CIUDAD
+# ====================================
 class ProviderCity(models.Model):
+    """
+    Relación Many-to-Many entre proveedores y ciudades que atienden.
+    """
     provider = models.ForeignKey(
         'authentication.Provider',
         on_delete=models.CASCADE,

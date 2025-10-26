@@ -10,48 +10,110 @@ from .serializers import (CountrySerializer,
                           CitySerializer,
                           AddressSerializer,
                           ProviderCitySerializer)
-
+# ====================================
+# VIEWSET: COUNTRY
+# ====================================
 class CountryViewSet(viewsets.ModelViewSet):
+    
+    """
+    ViewSet para el modelo Country.
+    Permite todas las operaciones CRUD (GET, POST, PUT, DELETE).
+    """
     queryset = Country.objects.all()
     serializer_class = CountrySerializer
 
+# ====================================
+# VIEWSET: PROVINCE
+# ====================================
 class ProvinceViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para el modelo Province.
+    Permite todas las operaciones CRUD.
+    """
     queryset = Province.objects.all()
     serializer_class = ProvinceSerializer
 
+# ====================================
+# VIEWSET: DEPARTMENT
+# ====================================
 class DepartmentViewSet(viewsets.ModelViewSet):
+    
+    
+    """
+    ViewSet para el modelo Department.
+    Incluye operación adicional para filtrar por provincia.
+    """
     queryset = Department.objects.all()
     serializer_class = DepartmentSerializer
 
     @action(detail=False, methods=['get'], url_path='by-province/(?P<province_id>[^/.]+)')
     def by_province(self, request, province_id=None):
+
+        """
+        Retorna todos los departamentos de una provincia específica.
+        URL: /departments/by-province/<province_id>/
+        """
         departments = Department.objects.filter(province_id=province_id)
         serializer = self.get_serializer(departments, many=True)
         return Response(serializer.data)
 
+# ====================================
+# VIEWSET: CITY
+# ====================================
 class CityViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para el modelo City.
+    Incluye operación adicional para filtrar por departamento.
+    """
     queryset = City.objects.all()
     serializer_class = CitySerializer
 
     @action(detail=False, methods=['get'], url_path='by-department/(?P<department_id>[^/.]+)')
     def by_department(self, request, department_id=None):
+
+        """
+        Retorna todas las ciudades de un departamento específico.
+        URL: /cities/by-department/<department_id>/
+        """
         cities = City.objects.filter(department_id=department_id)
         serializer = self.get_serializer(cities, many=True)
         return Response(serializer.data)
 
+# ====================================
+# VIEWSET: ADDRESS
+# ====================================
 class AddressViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para el modelo Address.
+    Permite todas las operaciones CRUD.
+    """
     queryset = Address.objects.all()
     serializer_class = AddressSerializer
 
-
+# ====================================
+# API VIEW: PROVIDER CITIES (LISTADO)
+# ====================================
 class ProviderCitiesAPIView(APIView):
+    """
+    Retorna la lista de ciudades asignadas a un proveedor específico.
+    GET /cities-area/<provider_id>/
+    """
     def get(self, request, provider_id):
         provider_cities = ProviderCity.objects.filter(provider_id=provider_id).select_related('city')
         cities = [pc.city for pc in provider_cities]
         serializer = CitySerializer(cities, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
+# ====================================
+# API VIEW: DELETE PROVIDER-CITY
+# ====================================
 class ProviderCityDeleteAPIView(APIView):
+    
+    """
+    Elimina la relación entre un proveedor y una ciudad específica.
+    DELETE /providers/<provider_id>/cities/<city_id>/
+    """
     def delete(self, request, provider_id, city_id):
         print(f"Eliminar relación provider_id={provider_id}, city_id={city_id}")
         deleted_count, _ = ProviderCity.objects.filter(provider_id=provider_id, city_id=city_id).delete()
@@ -60,12 +122,23 @@ class ProviderCityDeleteAPIView(APIView):
         return Response({'detail': 'Relación eliminada correctamente.'}, status=status.HTTP_204_NO_CONTENT)
 
 
-
+# ====================================
+# VIEWSET: PROVIDER CITY
+# ====================================
 class ProviderCityViewSet(viewsets.ModelViewSet):
+    
+    """
+    ViewSet para el modelo ProviderCity (relación Many-to-Many entre proveedores y ciudades).
+    Incluye métodos para crear múltiples relaciones y sincronizar ciudades.
+    """
     queryset = ProviderCity.objects.all()
     serializer_class = ProviderCitySerializer
 
     def create(self, request, *args, **kwargs):
+        """
+        Permite crear una o varias relaciones proveedor-ciudad.
+        Detecta si `request.data` es lista o diccionario.
+        """
         is_many = isinstance(request.data, list)  # chequea si es lista o dict
         serializer = self.get_serializer(data=request.data, many=is_many)
         serializer.is_valid(raise_exception=True)
