@@ -18,10 +18,21 @@ from authentication.serializers import UserSerializer, ProviderReadSerializer
 
 
 # profiles/views.py
+
+# ====================================
+# API VIEW: PERFIL DEL USUARIO AUTENTICADO
+# ====================================
 class UserProfileAPIView(APIView):
+    """
+    Permite obtener o actualizar el perfil del usuario actualmente autenticado.
+    Soporta usuarios de tipo provider o customer.
+    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        """
+        Retorna los datos del usuario logueado y su perfil asociado.
+        """
         user = request.user
         role = None
         profile_data = None
@@ -46,6 +57,11 @@ class UserProfileAPIView(APIView):
         })
 
     def patch(self, request):
+        """
+        Permite actualizar el perfil del usuario autenticado.
+        - Actualiza imagen de perfil en User.
+        - Maneja datos de Provider o Customer, incluyendo dirección anidada.
+        """
         user = request.user
         profile_data = request.data.copy()
 
@@ -122,7 +138,9 @@ class UserProfileAPIView(APIView):
         return Response({"error": "No se pudo actualizar el perfil"}, status=400)
 
 
-
+# ====================================
+# API VIEW: DETALLES DE PERFIL DE UN USUARIO POR ID
+# ====================================
 class ProfileUserDetailAPIView(APIView):
 
     """
@@ -133,6 +151,9 @@ class ProfileUserDetailAPIView(APIView):
     GET /api/profile/?id_provider=7
     """
     def get(self, request):
+        """
+        Retorna los datos del usuario logueado y su perfil asociado.
+        """
         id_customer = request.query_params.get('id_customer')
         id_provider = request.query_params.get('id_provider')
 
@@ -156,15 +177,22 @@ class ProfileUserDetailAPIView(APIView):
             
 
 
-
+# ====================================
+# API VIEW: DETALLES DEL PERFIL DEL USUARIO LOGUEADO
+# ====================================
 class ProfileDetailAPIView(APIView):
+    """
+    Retorna información básica del perfil del usuario autenticado.
+    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         serializer = ProfileSerializer(request.user, context={'request': request})
         return Response(serializer.data)
 
-
+# ====================================
+# VIEWSETS DE CATÁLOGOS
+# ====================================
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
@@ -178,7 +206,9 @@ class ProfessionViewSet(viewsets.ModelViewSet):
     serializer_class = ProfessionSerializer
 
 
-
+# ====================================
+# API VIEW: ESTADO DEL PERFIL
+# ====================================
 class ProfileStatusAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
