@@ -4,10 +4,18 @@ from notifications.services import notification_service
 from .models import Petition
 from authentication.models import Customer, Provider
 
+
+
+# ====================================================
+# SIGNAL: notify_on_petition_created
+# ====================================================
 @receiver(post_save, sender=Petition)
 def notify_on_petition_created(sender, instance, created, **kwargs):
     """
-    Notificar a los proveedores cuando se crea una nueva petición
+    Notificar a los proveedores cuando se crea una nueva petición.
+    
+    Se dispara automáticamente después de guardar una instancia de Petition.
+    Solo se ejecuta si la petición es recién creada (created=True).
     """
     if created:
         # Obtener todos los proveedores que podrían estar interesados
@@ -28,10 +36,16 @@ def notify_on_petition_created(sender, instance, created, **kwargs):
                 }
             )
 
+# ====================================================
+# SIGNAL: notify_on_petition_closed
+# ====================================================
 @receiver(pre_save, sender=Petition)
 def notify_on_petition_closed(sender, instance, **kwargs):
     """
-    Notificar cuando una petición se cierra
+    Notificar cuando una petición se cierra.
+    
+    Se dispara antes de guardar una instancia de Petition.
+    Compara el estado anterior de la petición para detectar cierre.
     """
     if instance.pk:  # Solo para peticiones existentes
         try:

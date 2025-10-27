@@ -2,10 +2,20 @@ from django.db import models
 
 
 def petition_upload_path(instance, filename):
+    """
+    Función para definir la ruta de subida de archivos adjuntos a la petición.
+    La ruta será: petitions/<id_petition>/<filename>
+    """
     return f"petitions/{instance.id_petition.id_petition}/{filename}"
 
-# Create your models here.
+# ====================================================
+# MODELO: TypePetition
+# ====================================================
 class TypePetition(models.Model):
+    """
+    Modelo que define los tipos de peticiones que pueden existir en la plataforma.
+    Ejemplo: Solicitud de materiales, servicios, proyectos, etc.
+    """
     
     id_type_petition = models.AutoField(primary_key=True)
     type_petition = models.CharField(max_length=100)
@@ -18,8 +28,14 @@ class TypePetition(models.Model):
         db_table = 'n_type_petition'
         managed = False
 
-
+# ====================================================
+# MODELO: PetitionState
+# ====================================================
 class PetitionState(models.Model):
+    """
+    Modelo que define los posibles estados de una petición.
+    Ejemplo: Abierta, Cerrada, En proceso, Finalizada.
+    """
 
     id_state = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50)
@@ -29,17 +45,27 @@ class PetitionState(models.Model):
         db_table = 'n_petition_state'
         managed = False
 
-
+# ====================================================
+# MANAGER PERSONALIZADO: PetitionManager
+# ====================================================
 class PetitionManager(models.Manager):
     """
-    Manager personalizado para soft delete: excluye los registro borrados
+    Manager personalizado para implementar soft delete.
+    Solo devuelve los registros no eliminados (is_deleted=False)
     """
     def get_queryset(self):
         return super().get_queryset().filter(is_deleted=False)
 
-
+# ====================================================
+# MODELO: Petition
+# ====================================================
 class Petition(models.Model):
-
+    """
+    Modelo principal de Peticiones.
+    Contiene información general de la petición, tipo, cliente, fechas, estado,
+    categoría y relaciones con profesiones y tipos de proveedores.
+    Implementa soft delete mediante el campo 'is_deleted' y manager personalizado.
+    """
     id_petition = models.AutoField(primary_key=True)
     id_type_petition = models.ForeignKey(TypePetition, on_delete=models.PROTECT, db_column='id_type_petition')
     id_customer = models.IntegerField()
@@ -74,9 +100,13 @@ class Petition(models.Model):
         self.save(update_fields=['is_deleted'])
 
 
-
+# ====================================================
+# MODELO: PetitionCategory
+# ====================================================
 class PetitionCategory(models.Model):
-
+    """
+    Modelo intermedio para la relación ManyToMany entre Petition y Category.
+    """
     id_petition_category = models.AutoField(primary_key=True)
     id_petition = models.ForeignKey(Petition, on_delete=models.CASCADE, db_column='id_petition')
     id_category = models.ForeignKey('profiles.Category', on_delete=models.CASCADE, db_column='id_category')
@@ -85,9 +115,14 @@ class PetitionCategory(models.Model):
         db_table = 'n_petition_category'
         managed = False
 
-
+# ====================================================
+# MODELO: PetitionAttachment
+# ====================================================
 class PetitionAttachment(models.Model):
-
+    """
+    Modelo para almacenar archivos adjuntos a una petición.
+    Cada archivo se sube a la ruta definida por petition_upload_path.
+    """
     id_petition_attachment = models.AutoField(primary_key=True)
     id_petition = models.ForeignKey(Petition, on_delete=models.CASCADE, db_column='id_petition')
     file = models.FileField(upload_to=petition_upload_path, db_column='url')
@@ -101,8 +136,14 @@ class PetitionAttachment(models.Model):
         db_table = 'n_petition_attachment'
         managed = False
 
-
+# ====================================================
+# MODELO: PetitionMaterial
+# ====================================================
 class PetitionMaterial(models.Model):
+    """
+    Modelo para gestionar los materiales asociados a una petición.
+    Contiene cantidad, precio unitario y referencias de creación/actualización.
+    """
     id_petition_material = models.AutoField(primary_key=True)
     id_petition = models.ForeignKey(Petition, on_delete=models.CASCADE, db_column='id_petition')
     id_article = models.IntegerField()
@@ -118,7 +159,14 @@ class PetitionMaterial(models.Model):
         managed = False
 
 
+# ====================================================
+# MODELO: PetitionStateHistory
+# ====================================================
 class PetitionStateHistory(models.Model):
+    """
+    Modelo para almacenar el historial de cambios de estado de una petición.
+    Permite auditar quién cambió el estado y cuándo.
+    """
     id_petition_state_history = models.AutoField(primary_key=True)
     id_petition = models.ForeignKey(Petition, on_delete=models.CASCADE, db_column='id_petition')
     id_state = models.ForeignKey(PetitionState, on_delete=models.PROTECT, db_column='id_state')

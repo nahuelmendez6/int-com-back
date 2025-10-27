@@ -10,51 +10,96 @@ from .models import (
     PetitionStateHistory
 )
 
+# ====================================================
+# SERIALIZER: TypePetitionSerializer
+# ====================================================
 class TypePetitionSerializer(serializers.ModelSerializer):
+    """
+    Serializer para el modelo TypePetition.
+    Permite serializar y deserializar los tipos de peticiones.
+    """
 
     class Meta:
         model = TypePetition
         fields = '__all__'
 
-
+# ====================================================
+# SERIALIZER: PetitionStateSerializer
+# ====================================================
 class PetitionStateSerializer(serializers.ModelSerializer):
+    """
+    Serializer para el modelo PetitionState.
+    Permite manejar la serialización de los estados de una petición.
+    """
 
     class Meta:
         model = PetitionState
         fields = '__all__'
 
 
-
+# ====================================================
+# SERIALIZER: PetitionCategorySerializer
+# ====================================================
 class PetitionCategorySerializer(serializers.ModelSerializer):
-
+    """
+    Serializer para el modelo intermedio PetitionCategory.
+    Permite representar las categorías asociadas a cada petición.
+    """
     class Meta:
         model = PetitionCategory
         fields = '__all__'
 
-
+# ====================================================
+# SERIALIZER: PetitionAttachmentSerializer
+# ====================================================
 class PetitionAttachmentSerializer(serializers.ModelSerializer):
-
+    """
+    Serializer para los archivos adjuntos a una petición.
+    Gestiona la serialización de los attachments.
+    """
     class Meta:
         model = PetitionAttachment
         fields = '__all__'
 
-
+# ====================================================
+# SERIALIZER: PetitionMaterialSerializer
+# ====================================================
 class PetitionMaterialSerializer(serializers.ModelSerializer):
-
+    """
+    Serializer para los materiales asociados a una petición.
+    Incluye cantidad, precio unitario y referencias de creación/actualización.
+    """
     class Meta:
         model = PetitionMaterial
         fields = '__all__'
 
 
+# ====================================================
+# SERIALIZER: PetitionStateHistorySerializer
+# ====================================================
 class PetitionStateHistorySerializer(serializers.ModelSerializer):
-
+    """
+    Serializer para el historial de cambios de estado de una petición.
+    Permite auditar los cambios y mostrarlos en APIs.
+    """
     class Meta:
         model = PetitionStateHistory
         fields = '__all__'
 
-
+# ====================================================
+# SERIALIZER PRINCIPAL: PetitionSerializer
+# ====================================================
 class PetitionSerializer(serializers.ModelSerializer):
+    """
+    Serializer principal para el modelo Petition.
+    Incluye relaciones anidadas a:
+    - categories: Categorías asociadas a la petición
+    - attachments: Archivos adjuntos
+    - materials: Materiales solicitados
+    - state_history: Historial de cambios de estado
 
+    También incluye relaciones directas con TypePetition y PetitionState.
+    """
 
     # Relaciones anidadas
     categories = PetitionCategorySerializer(many=True, source='petitioncategory_set', read_only=True)

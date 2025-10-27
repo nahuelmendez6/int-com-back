@@ -35,11 +35,14 @@ from .serializers import (PetitionSerializer,
                           PetitionMaterialSerializer,
                           PetitionAttachmentSerializer)
 
-
+# ====================================================
+# APIView: TypePetitionAPIView
+# ====================================================
 class TypePetitionAPIView(APIView):
 
     """
-    APIView para consumir Typepetition
+    APIView para listar todos los tipos de peticiones.
+    GET: devuelve todos los registros de TypePetition.
     """
     def get(self, request):
         typePetition = TypePetition.objects.all()
@@ -49,13 +52,24 @@ class TypePetitionAPIView(APIView):
 
 
 
-
+# ====================================================
+# APIView: PetitionAPIView
+# ====================================================
 class PetitionAPIView(APIView):
     """
-    APIView para CRUD de peticiones con escritura anidada y filtro por proveedor
+    APIView para CRUD de Peticiones con soporte de relaciones anidadas:
+    - Crear/actualizar categorías, adjuntos y materiales
+    - Filtrado según perfil del usuario (Proveedor o Cliente)
     """
 
+
     def get(self, request, pk=None):
+        """
+        GET:
+        - Si es proveedor, devuelve peticiones filtradas según su perfil
+        - Si es cliente, devuelve solo sus peticiones
+        - pk opcional: si se pasa, devuelve un solo objeto
+        """
         provider = getattr(request.user, 'provider', None)
         customer = getattr(request.user, 'customer', None)
 
@@ -92,6 +106,12 @@ class PetitionAPIView(APIView):
         )
         
     def post(self, request):
+        """
+        POST: Crear una nueva petición con relaciones anidadas
+        - categories: lista de categorías
+        - attachments: archivos adjuntos
+        - materials: lista de materiales
+        """
         serializer = PetitionSerializer(data=request.data)
 
         if serializer.is_valid():
@@ -133,6 +153,11 @@ class PetitionAPIView(APIView):
 
 
     def patch(self, request, pk):
+        """
+        PATCH: Actualizar una petición existente y sus relaciones anidadas
+        - Se soporta actualización parcial
+        - Actualiza categorías, adjuntos y materiales si se envían
+        """
         petition = get_object_or_404(Petition, pk=pk)
         serializer = PetitionSerializer(petition, data=request.data, partial=True)
         if serializer.is_valid():
@@ -176,12 +201,21 @@ class PetitionAPIView(APIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
+# ====================================================
+# APIView: ProviderPetitionsFeedAPIView
+# ====================================================
 class ProviderPetitionsFeedAPIView(APIView):
+    """
+    APIView para que un proveedor obtenga el feed de peticiones filtradas
+    según su perfil.
+    - Solo usuarios autenticados
+    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-
+        """
+        GET: Devuelve todas las peticiones que coinciden con el perfil del proveedor
+        """
         user = request.user
         
         try:
