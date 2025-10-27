@@ -5,7 +5,9 @@ from .models import GradeProvider, GradeCustomer
 from .serializers import GradeProviderSerializer, GradeProviderWriteSerializer, GradeCustomerSerializer, GradeCustomerWriteSerializer
 from django.db import connection
 
-# Listado de calificaciones (GET) y creación (POST)
+# ====================================================
+# API para listar y crear calificaciones de Provider
+# ====================================================
 class GradeProviderAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -71,6 +73,9 @@ class GradeProviderDetailAPIView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+# ====================================================
+# API para obtener el promedio de calificaciones de un Provider
+# ====================================================
 class ProviderAverageRatingView(APIView):
     def get(self, request, provider_id):
         with connection.cursor() as cursor:

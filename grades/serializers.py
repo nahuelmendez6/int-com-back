@@ -4,13 +4,21 @@ from authentication.models import Provider, User
 
 
 # Serializer simple para Grade
+
+# ====================================================
+# Serializer simple para el modelo Grade
+# ====================================================
 class GradeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Grade
         fields = ['id_grade', 'name', 'description', 'value']
 
 
-# Serializer para Customer / User (quien calificó)
+
+
+# ====================================================
+# Serializer para Customer / User (quien realizó la calificación)
+# ====================================================
 class CustomerSerializer(serializers.ModelSerializer):
     profile_image = serializers.SerializerMethodField()
 
@@ -27,7 +35,9 @@ class CustomerSerializer(serializers.ModelSerializer):
         return str(obj.profile_image)
 
 
+# ====================================================
 # Serializer para Provider
+# ====================================================
 class ProviderSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='user.name', read_only=True)
     lastname = serializers.CharField(source='user.lastname', read_only=True)
@@ -45,7 +55,9 @@ class ProviderSerializer(serializers.ModelSerializer):
         return None
 
 
-# Serializer principal para GradeProvider
+# ====================================================
+# Serializer principal para GradeProvider (lectura)
+# ====================================================
 class GradeProviderSerializer(serializers.ModelSerializer):
     provider = ProviderSerializer()
     customer = CustomerSerializer()
@@ -66,6 +78,10 @@ class GradeProviderSerializer(serializers.ModelSerializer):
             'date_update',
         ]
 
+
+# ====================================================
+# Serializer principal para GradeCustomer (lectura)
+# ====================================================
 class GradeCustomerSerializer(serializers.ModelSerializer):
     provider = ProviderSerializer()
     customer = CustomerSerializer()
@@ -85,7 +101,9 @@ class GradeCustomerSerializer(serializers.ModelSerializer):
             'user_update',
         ]
 
-
+# ====================================================
+# Serializer para crear/actualizar GradeCustomer
+# ====================================================
 class GradeCustomerWriteSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -102,6 +120,10 @@ class GradeCustomerWriteSerializer(serializers.ModelSerializer):
             'user_update',
         ]
 
+
+# ====================================================
+# Serializer para crear/actualizar GradeProvider
+# ====================================================
 class GradeProviderWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = GradeProvider

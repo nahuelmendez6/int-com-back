@@ -1,6 +1,9 @@
 from django.db import models
 from authentication.models import Provider, Customer, User
 
+# ====================================================
+# Modelo que representa los posibles "grados" o calificaciones
+# ====================================================
 class Grade(models.Model):
     id_grade = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50)
@@ -15,7 +18,9 @@ class Grade(models.Model):
     def __str__(self):
         return f"{self.name} ({self.value})"
 
-
+# ====================================================
+# Calificaciones que los Providers dan a los Customers
+# ====================================================
 class GradeCustomer(models.Model):
     id_grade_customer = models.AutoField(primary_key=True)
     customer = models.ForeignKey(
@@ -47,6 +52,9 @@ class GradeCustomer(models.Model):
     def __str__(self):
         return f"Grade {self.rating} for {self.provider} by {self.customer}"
 
+# ====================================================
+# Calificaciones que los Customers dan a los Providers
+# ====================================================
 class GradeProvider(models.Model):
     id_grade_provider = models.AutoField(primary_key=True)
     provider = models.ForeignKey(Provider, on_delete=models.CASCADE, db_column='id_provider')
