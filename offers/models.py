@@ -1,7 +1,18 @@
 from django.db import models
 
 
+# ====================================================
+# Modelo: TypeOffer
+# ====================================================
 class TypeOffer(models.Model):
+    """
+    Modelo que representa los tipos de ofertas.
+    Campos:
+    - id_type_offer: PK auto incremental
+    - name: nombre del tipo de oferta
+    - id_user_create / id_user_update: usuarios que crearon/actualizaron el registro
+    - date_create / date_update: timestamps de creación y actualización
+    """
     id_type_offer = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
 
@@ -18,16 +29,35 @@ class TypeOffer(models.Model):
     def __str__(self):
         return self.name
 
-
+# ====================================================
+# Manager personalizado: OfferManager
+# ====================================================
 class OfferManager(models.Manager):
     """
-    Manager personalizado para soft delete: excluye los registros marcados como eliminados
+    Manager personalizado para el modelo Offer.
+    Filtra automáticamente los registros marcados como eliminados (soft delete).
     """
     def get_queryset(self):
         return super().get_queryset().filter(is_deleted=False)
 
 
+# ====================================================
+# Modelo: Offer
+# ====================================================
 class Offer(models.Model):
+    """
+    Modelo que representa una oferta publicada por un proveedor.
+    Campos principales:
+    - offer_id: PK auto incremental
+    - id_type_offer: FK al tipo de oferta (TypeOffer)
+    - name, description: información de la oferta
+    - date_open, date_close: rango de validez de la oferta
+    - status: estado de la oferta (draft, active, closed, archived)
+    - id_provider: proveedor que creó la oferta
+    - user_create_id / user_update_id: usuarios que crearon/actualizaron
+    - date_create / date_update: timestamps de creación y actualización
+    - is_deleted: soft delete
+    """
     STATUS_CHOICES = [
         ('draft', 'Draft'),
         ('active', 'Active'),

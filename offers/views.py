@@ -9,9 +9,14 @@ from authentication.models import Provider, Customer
 
 from .services import filter_offers_for_customer_by_city_interest
 
+# ====================================================
+# APIView: TypeOfferListCreateAPIView
+# ====================================================
 class TypeOfferListCreateAPIView(APIView):
     """
-    Listar y crear TypeOffers
+    API para listar todos los TypeOffer existentes y crear nuevos TypeOffer.
+    GET: devuelve todos los TypeOffer.
+    POST: crea un nuevo TypeOffer.
     """
     def get(self, request):
         type_offers = TypeOffer.objects.all()
@@ -25,10 +30,15 @@ class TypeOfferListCreateAPIView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
+# ====================================================
+# APIView: TypeOfferDetailAPIView
+# ====================================================
 class TypeOfferDetailAPIView(APIView):
     """
-    Obtener, actualizar o eliminar un TypeOffer
+    API para obtener, actualizar o eliminar un TypeOffer específico.
+    GET: obtener TypeOffer por ID.
+    PUT: actualizar TypeOffer (parcial permitido).
+    DELETE: eliminar TypeOffer.
     """
     def get_object(self, pk):
         return get_object_or_404(TypeOffer, pk=pk)
@@ -51,10 +61,13 @@ class TypeOfferDetailAPIView(APIView):
         type_offer.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-
+# ====================================================
+# APIView: OfferListCreateAPIView
+# ====================================================
 class OfferListCreateAPIView(APIView):
     """
-    Listar y crear Offers (solo las que no están soft-deleted)
+    API para listar y crear ofertas (Offer) de un proveedor.
+    Solo muestra las ofertas activas (soft delete excluido por el Manager).
     """
     def get(self, request):
         
@@ -87,10 +100,15 @@ class OfferListCreateAPIView(APIView):
         print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
+# ====================================================
+# APIView: OfferDetailAPIView
+# ====================================================
 class OfferDetailAPIView(APIView):
     """
-    Obtener, actualizar o soft delete de una Offer
+    API para obtener, actualizar o eliminar (soft delete) una oferta específica.
+    GET: obtener oferta por ID.
+    PATCH: actualizar parcialmente una oferta.
+    DELETE: soft delete (marcar is_deleted=True).
     """
     def get_object(self, pk):
         return get_object_or_404(Offer, pk=pk)
@@ -115,11 +133,14 @@ class OfferDetailAPIView(APIView):
 
 
 
-
+# ====================================================
+# APIView: CustomerOfferFeedAPIView
+# ====================================================
 class CustomerOfferFeedAPIView(APIView):
 
     """
-    Listar ofertas filtradas para cliente
+    API para que un cliente obtenga un feed de ofertas filtradas.
+    Filtra ofertas según intereses del cliente y ciudades de interés.
     """
     permission_classes = [IsAuthenticated]
 
