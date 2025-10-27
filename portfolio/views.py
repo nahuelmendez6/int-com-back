@@ -7,10 +7,14 @@ from .models import Portfolio, PortfolioAttachment, Material, MaterialAttachment
 from .serializers import PortfolioSerializer, PortfolioAttachmentSerializer, MaterialSerializer, MaterialAttachmentSerializer
 
 
+# ====================================================
+# APIView: PortfolioAPIView
+# ====================================================
 class PortfolioAPIView(APIView):
     """
-    GET: Lista todos los portfolios (o los del proveedor si se pasa id_provider)
-    POST: Crea un nuevo portfolio
+    Gestiona los portfolios:
+    - GET: Lista todos los portfolios o filtra por proveedor si se pasa 'id_provider'.
+    - POST: Crea un nuevo portfolio.
     """
 
     def get(self, request):
@@ -33,12 +37,15 @@ class PortfolioAPIView(APIView):
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
+# ====================================================
+# APIView: MaterialAPIView
+# ====================================================
 class MaterialAPIView(APIView):
 
     """
-    GET: Lista los materiales de un proveedor
-    POST: Crea materiales
+    Gestiona los materiales:
+    - GET: Lista los materiales de un proveedor o todos si no se pasa id_provider.
+    - POST: Crea un nuevo material.
     """
     def get(self, request):
         id_provider = request.query_params.get('id_provider', None)
@@ -60,9 +67,15 @@ class MaterialAPIView(APIView):
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
+# ====================================================
+# APIView: MaterialDetailAPIView
+# ====================================================
 class MaterialDetailAPIView(APIView):
-
+    """
+    Gestiona un material específico:
+    - GET: Obtiene un material por id_material.
+    - PATCH: Actualiza parcialmente un material.
+    """
     def get(self, request, id_material):
         material = get_object_or_404(Material, id_material=id_material)
         serializer = MaterialSerializer(material)
@@ -76,11 +89,14 @@ class MaterialDetailAPIView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-
+# ====================================================
+# APIView: MaterialAttachmentDetailAPIView
+# ====================================================
 class MaterialAttachmentDetailAPIView(APIView):
     """
-    GET: Obtiene un adjunto específico
-    DELETE: Elimina un adjunto
+    Gestiona un adjunto de material específico:
+    - GET: Obtiene un adjunto por id_material_attachment.
+    - DELETE: Elimina un adjunto.
     """
 
     def get(self, request, id_material_attachment):
@@ -93,12 +109,15 @@ class MaterialAttachmentDetailAPIView(APIView):
         attachment.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-
+# ====================================================
+# APIView: PortfolioDetailAPIView
+# ====================================================
 class PortfolioDetailAPIView(APIView):
 
     """
-    GET: Obtiene un portfilio especifico por ID
-    PATCH: Actualiza un portfolio
+    Gestiona un portfolio específico:
+    - GET: Obtiene un portfolio por id_portfolio.
+    - PATCH: Actualiza parcialmente un portfolio.
     """
 
     def get(self, request, id_portfolio):
@@ -115,12 +134,14 @@ class PortfolioDetailAPIView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
-
+# ====================================================
+# APIView: MaterialAttachmentAPIView
+# ====================================================
 class MaterialAttachmentAPIView(APIView):
-
     """
-    GET: Lsita los adjuntos
-    POST: Crea adjunto
+    Gestiona adjuntos de materiales:
+    - GET: Lista los adjuntos de un material (filtrado por id_material).
+    - POST: Crea un nuevo adjunto.
     """
 
     def get(self, request):
@@ -140,11 +161,14 @@ class MaterialAttachmentAPIView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
+# ====================================================
+# APIView: PortfolioAttachmentDetailAPIView
+# ====================================================
 class PortfolioAttachmentAPIView(APIView):
     """
-    GET: Lista los adjuntos (puede filtrarse por id_portfolio)
-    POST: Crea un nuevo adjunto (archivo)
+    Gestiona un adjunto específico de portfolio:
+    - GET: Obtiene un adjunto por id_attachment.
+    - DELETE: Elimina un adjunto.
     """
 
     def get(self, request):

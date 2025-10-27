@@ -1,9 +1,15 @@
 from django.db import models
 
+
+# ====================================================
+# Modelo: Portfolio
+# ====================================================
 class Portfolio(models.Model):
 
     """
-    Modelo encargado de gestionar la tabla n_portfolio
+    Modelo que representa el portafolio de un proveedor.
+    Gestiona la tabla 'n_portfolio' y permite asociar información
+    y archivos (PortfolioAttachment) relacionados a un proveedor.
     """
 
     id_portfolio = models.AutoField(primary_key=True)
@@ -29,7 +35,14 @@ class Portfolio(models.Model):
         return self.title
     
 
+# ====================================================
+# Modelo: PortfolioAttachment
+# ====================================================
 class PortfolioAttachment(models.Model):
+    """
+    Archivos asociados a un portafolio.
+    Permite almacenar imágenes, videos, documentos u otros tipos de archivos.
+    """
     class FileType(models.TextChoices):
         IMAGE = 'image', 'Imagen'
         VIDEO = 'video', 'Video'
@@ -62,8 +75,14 @@ class PortfolioAttachment(models.Model):
     def __str__(self):
         return f"{self.file.name} ({self.file_type})"
 
-
+# ====================================================
+# Modelo: Material
+# ====================================================
 class Material(models.Model):
+    """
+    Materiales que un proveedor ofrece.
+    Gestiona la tabla 'n_material' y permite asociar archivos (MaterialAttachment)
+    """
     id_material = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
     id_provider = models.IntegerField()  # FK a n_provider
@@ -79,8 +98,14 @@ class Material(models.Model):
     def __str__(self):
         return self.name
     
-
+# ====================================================
+# Modelo: MaterialAttachment
+# ====================================================
 class MaterialAttachment(models.Model):
+    """
+    Archivos asociados a un material.
+    Permite almacenar imágenes, documentos u otros archivos relacionados al material.
+    """
 
     id_material_attachment = models.AutoField(primary_key=True)
     id_material = models.ForeignKey(
