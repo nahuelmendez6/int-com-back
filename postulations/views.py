@@ -14,17 +14,28 @@ from .serializers import (PostulationSerializer,
                             PostulationMaterialSerializer)
 from petitions.models import Petition
 
-
+# ====================================================
+# API VIEW: PostulationAPIView
+# ====================================================
 class PostulationAPIView(APIView):
     """
-    Gestiona la creación, listado, actualización y eliminación de postulaciones
-    con presupuestos y materiales.
+    API para gestionar postulaciones:
+        - Listar postulaciones de un proveedor o cliente
+        - Recuperar detalle de una postulación
+        - Crear nuevas postulaciones
+        - Actualizar postulación o estado según rol del usuario
     """
 
     # --------------------------
-    # LIST / DETAIL
+    # MÉTODO GET (LIST / DETAIL)
     # --------------------------
     def get(self, request, pk=None, id_petition=None):
+        """
+        Listar todas las postulaciones de un proveedor o de un cliente
+        dependiendo del rol del usuario.
+        - Proveedor: puede listar todas sus postulaciones.
+        - Cliente: puede listar todas las postulaciones de una petición propia.
+        """
         provider = getattr(request.user, 'provider', None)
         customer = getattr(request.user, 'customer', None)
 
@@ -60,10 +71,16 @@ class PostulationAPIView(APIView):
         # Usuario sin rol válido
         return Response({"detail": "Usuario no válido."}, status=status.HTTP_403_FORBIDDEN)
 
+
     # --------------------------
-    # CREATE
-    # --------------------------
+    # MÉTODO POST (CREATE)
+    # -------------------------
     def post(self, request):
+        """
+        Crear una nueva postulación.
+        Solo los proveedores pueden crear postulaciones.
+        """
+        print("Datos recibidos:", request.data)
         provider = getattr(request.user, 'provider', None)
         if not provider:
             return Response({"detail": "Solo los proveedores pueden crear postulaciones."},
@@ -84,6 +101,11 @@ class PostulationAPIView(APIView):
     # PATCH / UPDATE
     # --------------------------
     def patch(self, request, pk=None, id_petition=None):
+        """
+        Actualizar una postulación existente.
+        - Proveedor: puede actualizar toda la postulación (presupuestos, materiales, propuesta, etc.)
+        - Cliente: solo puede actualizar el estado de la postulación
+        """
         provider = getattr(request.user, 'provider', None)
         customer = getattr(request.user, 'customer', None)
         print(request.data)
@@ -135,7 +157,18 @@ class PostulationAPIView(APIView):
         return Response({"detail": "Usuario no válido."}, status=status.HTTP_403_FORBIDDEN)
 
 
+
+# ====================================================
+# API VIEW: PostulationMaterialAPIView
+# ====================================================
 class PostulationMaterialAPIView(APIView):
+    """
+    API para gestionar materiales de una postulación:
+        - Listar materiales de una postulación
+        - Crear un nuevo material
+        - Actualizar un material existente
+        - Eliminar un material
+    """
 
     def get(self, request, id_postulation=None):
         """

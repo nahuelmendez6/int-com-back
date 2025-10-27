@@ -6,7 +6,15 @@ from .models import (
     PostulationState
 )
 
+# ==========================================
+# SERIALIZER: PostulationBudgetSerializer
+# ==========================================
 class PostulationBudgetSerializer(serializers.ModelSerializer):
+    """
+    Serializer para el modelo PostulationBudget.
+    Se encarga de serializar/deserializar los datos de costos
+    asociados a una postulación (por hora, ítem, proyecto, etc.).
+    """
     id_budget = serializers.IntegerField(required=False)
 
     class Meta:
@@ -24,7 +32,16 @@ class PostulationBudgetSerializer(serializers.ModelSerializer):
             'id_user_create'
         ]
 
+
+# ==========================================
+# SERIALIZER: PostulationMaterialSerializer
+# ==========================================
 class PostulationMaterialSerializer(serializers.ModelSerializer):
+    """
+    Serializer para el modelo PostulationMaterial.
+    Gestiona los materiales asociados a una postulación, incluyendo
+    su cantidad, precio unitario y total calculado.
+    """
     id_postulation_material = serializers.IntegerField(required=False)
     total = serializers.DecimalField(max_digits=15, decimal_places=2, read_only=True)
     material_name = serializers.CharField(source='id_material.name', read_only=True)
@@ -40,7 +57,15 @@ class PostulationMaterialSerializer(serializers.ModelSerializer):
             'notes'
         ]
 
+# ==========================================
+# SERIALIZER: PostulationSerializer
+# ==========================================
 class PostulationSerializer(serializers.ModelSerializer):
+    """
+    Serializer principal para el modelo Postulation.
+    Gestiona la creación, validación y actualización de postulaciones,
+    incluyendo sus presupuestos y materiales asociados.
+    """
     budgets = PostulationBudgetSerializer(many=True, required=False)
     materials = PostulationMaterialSerializer(many=True, required=False)
 
@@ -62,9 +87,14 @@ class PostulationSerializer(serializers.ModelSerializer):
             'materials',
             'is_deleted'
         ]
-
+    # -----------------------------
+    # Validaciones personalizadas
+    # -----------------------------
     def validate(self, data):
-        # validar que un porveedor solo pueda postular una vez por petición
+        """
+        Valida que un proveedor no pueda postular más de una vez a la misma petición.
+        Se omite esta validación si la instancia ya existe (update).
+        """
         
         if self.instance:
             return data  # Si es una actualización, no validamos esto
@@ -80,6 +110,7 @@ class PostulationSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
+        print("Creando postulación con datos:", validated_data)
         budgets_data = validated_data.pop('budgets', [])
         materials_data = validated_data.pop('materials', [])
 
@@ -94,8 +125,17 @@ class PostulationSerializer(serializers.ModelSerializer):
             PostulationMaterial.objects.create(id_postulation=postulation, **material)
 
         return postulation
+    
 
+
+    # -----------------------------
+    # Método UPDATE
+    # -----------------------------
     def update(self, instance, validated_data):
+        """
+        Actualiza una postulación existente y sus relaciones anidadas (presupuestos y materiales).
+        Si un presupuesto/material tiene ID, se actualiza. Si no, se crea uno nuevo.
+        """
         budgets_data = validated_data.pop('budgets', [])
         materials_data = validated_data.pop('materials', [])
 
@@ -131,7 +171,16 @@ class PostulationSerializer(serializers.ModelSerializer):
         return instance
 
 
+
+
+# ===========================================
+# SERIALIZER: PostulationReadSerializer
+# ===========================================
 class PostulationReadSerializer(serializers.ModelSerializer):
+    """
+    Serializer de solo lectura para listar o recuperar postulaciones.
+    Incluye presupuestos y materiales en formato anidado.
+    """
     budgets = PostulationBudgetSerializer(many=True, read_only=True)
     materials = PostulationMaterialSerializer(many=True, read_only=True)
 

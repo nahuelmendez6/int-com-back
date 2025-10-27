@@ -6,10 +6,22 @@ from .models import Postulation
 from petitions.models import Petition
 from authentication.models import Customer, Provider
 
+
+
+# ====================================================
+# SIGNAL: notify_on_postulation_create
+# ====================================================
 @receiver(post_save, sender=Postulation)
 def notify_on_postulation_create(sender, instance, created, **kwargs):
     """
-    Notificar al customer cuando se crea una nueva postulación
+    Señal que se ejecuta automáticamente cuando se crea una nueva postulación.
+    Objetivo:
+        → Notificar al cliente (Customer) propietario de la petición correspondiente.
+    Flujo:
+        1. Se detecta una nueva instancia de Postulation (created=True).
+        2. Se obtiene la Petition asociada mediante id_petition.
+        3. Se obtiene el Customer vinculado a la petición.
+        4. Se envía una notificación al usuario del cliente usando notification_service.
     """
     if created:
         try:
@@ -34,10 +46,23 @@ def notify_on_postulation_create(sender, instance, created, **kwargs):
         except (Petition.DoesNotExist, Customer.DoesNotExist):
             return
 
+# ====================================================
+# SIGNAL: notify_on_state_change
+# ====================================================
 @receiver(pre_save, sender=Postulation)
 def notify_on_state_change(sender, instance, **kwargs):
     """
-    Notificar al provider cuando cambia el estado de su postulación
+    Señal que se ejecuta antes de guardar una postulación existente (pre_save).
+    Objetivo:
+        → Detectar cambios en el estado de la postulación (id_state).
+        → Notificar al proveedor (Provider) sobre el cambio.
+    Flujo:
+        1. Se compara el estado anterior con el nuevo.
+        2. Si hay un cambio, se envía una notificación al proveedor.
+        3. El tipo y contenido del mensaje dependen del nuevo estado:
+            - 'Aceptada' → notificación de aceptación.
+            - 'Rechazada' → notificación de rechazo.
+            - Otro → notificación genérica de cambio de estado.
     """
     if not instance.pk:
         return  # no existe aún, no hay estado previo
@@ -85,10 +110,22 @@ def notify_on_state_change(sender, instance, **kwargs):
         except (Provider.DoesNotExist, Petition.DoesNotExist):
             return
 
+
+# ====================================================
+# SIGNAL: notify_on_postulation_winner
+# ====================================================
 @receiver(post_save, sender=Postulation)
 def notify_on_postulation_winner(sender, instance, **kwargs):
     """
-    Notificar cuando una postulación es marcada como ganadora
+    Señal que se ejecuta luego de guardar una postulación (post_save).
+    Objetivo:
+        → Notificar al proveedor cuando su postulación es marcada como ganadora.
+    Flujo:
+        1. Se verifica si el campo 'winner' está en True.
+        2. Se obtiene el proveedor y la petición asociados.
+        3. Se envía una notificación de tipo 'postulation_accepted'.
+        4. Se marca la instancia temporalmente como notificada (_winner_notified)
+           para evitar duplicados en ejecuciones múltiples del signal.
     """
     if instance.winner and not getattr(instance, '_winner_notified', False):
         try:

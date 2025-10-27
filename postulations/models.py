@@ -5,10 +5,15 @@ from django.forms import ValidationError
 from portfolio.models import Material
 from petitions.models import Petition
 
+
+# ==========================
+# MODELO: PostulationState
+# ==========================
 class PostulationState(models.Model):
 
     """
-    Modelo para manejar los estados de las potulaciones
+    Modelo para manejar los estados posibles de las postulaciones.
+    Ejemplos: 'Pendiente', 'Aprobada', 'Rechazada', 'Finalizada'.
     """
 
 
@@ -24,10 +29,14 @@ class PostulationState(models.Model):
         return self.name
 
 
+# ==========================
+# MODELO: Postulation
+# ==========================
 class Postulation(models.Model):
 
     """
-    Modelo central de postulacion
+    Modelo central de postulaciones realizadas por proveedores
+    en respuesta a una petición publicada en la plataforma.
     """
 
     id_postulation = models.AutoField(primary_key=True)
@@ -53,7 +62,12 @@ class Postulation(models.Model):
         
 
     def clean(self):
-        # Traer a la peticion asociada
+        """
+        Valida la consistencia y unicidad de la postulación antes de guardarla:
+        - Verifica que la petición asociada exista.
+        - Controla que las fechas de la petición permitan postularse.
+        - Impide duplicar postulaciones activas del mismo proveedor sobre la misma petición.
+        """
         try:
             petition = Petition.objects.get(pk=self.id_petition)
         except Petition.DoesNotExist:
@@ -85,10 +99,15 @@ class Postulation(models.Model):
         return f'Postulation {self.id_postulation}'
 
 
+# ==========================
+# MODELO: PostulationBudget
+# ==========================
 class PostulationBudget(models.Model):
 
     """
-    Modelo para gestionar tipo y y cantidad de costos asociados a una postulación
+    Modelo para registrar los costos asociados a una postulación.
+    Permite especificar tipo de costo (por hora, por ítem, etc.),
+    cantidad, precio unitario, y observaciones.
     """
 
     COST_TYPE_CHOICES = [
@@ -125,10 +144,14 @@ class PostulationBudget(models.Model):
         return f'Budget {self.id_budget} (Postulation {self.id_postulation_id})'
 
 
+# ==========================
+# MODELO: PostulationStateHistory
+# ==========================
 class PostulationStateHistory(models.Model):
 
     """
-    Modelo para gestionar el historial de cambios de estado de una potulacion
+    Modelo para registrar el historial de cambios de estado de cada postulación.
+    Permite auditar quién y cuándo modificó el estado.
     """
 
     id_history = models.AutoField(primary_key=True)
@@ -154,8 +177,15 @@ class PostulationStateHistory(models.Model):
         return f'History {self.id_history} (Postulation {self.id_postulation_id})'
 
 
-
+# ==========================
+# MODELO: PostulationMaterial
+# ==========================
 class PostulationMaterial(models.Model):
+    """
+    Modelo intermedio que relaciona materiales con una postulación.
+    Permite detallar cantidad, precio unitario, total y observaciones
+    sobre cada material presupuestado.
+    """
     id_postulation_material = models.AutoField(primary_key=True)
     id_postulation = models.ForeignKey(
         Postulation,
