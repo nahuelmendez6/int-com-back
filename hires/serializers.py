@@ -3,8 +3,14 @@ from postulations.models import Postulation, PostulationBudget
 from petitions.models import Petition
 from authentication.models import Customer, Provider
 
-
+# ====================================================
+# Serializer para la contratación (Hire)
+# ====================================================
 class HireSerializer(serializers.ModelSerializer):
+    """
+    Serializer para representar una postulación aprobada (contratación),
+    incluyendo información de la petición, cliente, proveedor y precio final.
+    """
     petition = serializers.SerializerMethodField()
     customer = serializers.SerializerMethodField()
     provider = serializers.SerializerMethodField()
@@ -23,8 +29,15 @@ class HireSerializer(serializers.ModelSerializer):
             'final_price',
         ]
 
-    # Petition
+    # ====================================================
+    # Métodos para campos personalizados
+    # ====================================================
+
     def get_petition(self, obj):
+        """
+        Obtiene la información resumida de la Petition asociada a la postulación.
+        Retorna un dict con id y título de la Petition o None si no existe.
+        """
         petition = Petition.objects.filter(pk=obj.id_petition).first()
         if petition:
             return {
@@ -35,6 +48,10 @@ class HireSerializer(serializers.ModelSerializer):
 
     # Customer (desde la Petition)
     def get_customer(self, obj):
+        """
+        Obtiene información del Customer asociado a la Petition de la Postulation.
+        Retorna un dict con id, nombre, apellido y URL de la imagen de perfil.
+        """
         petition = Petition.objects.filter(pk=obj.id_petition).first()
         if petition and petition.id_customer:
             customer = Customer.objects.filter(pk=petition.id_customer).first()
@@ -49,6 +66,10 @@ class HireSerializer(serializers.ModelSerializer):
 
     # Provider
     def get_provider(self, obj):
+        """
+        Obtiene información del Provider asociado a la Postulation.
+        Retorna un dict con id, nombre, apellido, profesión y URL de imagen de perfil.
+        """
         provider = Provider.objects.filter(pk=obj.id_provider).first()
         if provider and provider.user:
             return {
@@ -62,11 +83,18 @@ class HireSerializer(serializers.ModelSerializer):
 
     # Final Price
     def get_final_price(self, obj):
+        """
+        Obtiene el precio final de la postulación desde PostulationBudget.
+        Retorna el monto o None si no existe presupuesto.
+        """
         budget = PostulationBudget.objects.filter(id_postulation=obj.id_postulation).first()
         return budget.amount if budget else None
 
 
 
+    # ====================================================
+    # Método auxiliar privado
+    # ====================================================
     def _get_profile_image_url(self, user):
         """
         Devuelve una URL segura para el campo profile_image sin intentar leer el binario
