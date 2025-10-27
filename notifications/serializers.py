@@ -1,6 +1,10 @@
 from rest_framework import serializers
 from .models import Notification, NotificationSettings, NotificationType
 
+
+# ====================================================
+# Serializer para Notificaciones
+# ====================================================
 class NotificationSerializer(serializers.ModelSerializer):
     """Serializer para notificaciones"""
     notification_type_display = serializers.CharField(source='get_notification_type_display', read_only=True)
@@ -34,6 +38,11 @@ class NotificationSerializer(serializers.ModelSerializer):
         else:
             return "Hace un momento"
 
+
+
+# ====================================================
+# Serializer para crear Notificaciones
+# ====================================================
 class NotificationCreateSerializer(serializers.ModelSerializer):
     """Serializer para crear notificaciones"""
     
@@ -41,6 +50,11 @@ class NotificationCreateSerializer(serializers.ModelSerializer):
         model = Notification
         fields = ['user', 'title', 'message', 'notification_type', 'related_postulation_id', 'related_petition_id', 'metadata']
 
+
+
+# ====================================================
+# Serializer para actualizar Notificaciones
+# ====================================================
 class NotificationUpdateSerializer(serializers.ModelSerializer):
     """Serializer para actualizar notificaciones (marcar como leída)"""
     
@@ -48,6 +62,10 @@ class NotificationUpdateSerializer(serializers.ModelSerializer):
         model = Notification
         fields = ['is_read']
 
+
+# ====================================================
+# Serializer para configuración de notificaciones por usuario
+# ====================================================
 class NotificationSettingsSerializer(serializers.ModelSerializer):
     """Serializer para configuración de notificaciones"""
     
@@ -59,6 +77,10 @@ class NotificationSettingsSerializer(serializers.ModelSerializer):
             'petition_closed', 'email_notifications', 'push_notifications'
         ]
 
+
+# ====================================================
+# Serializer para estadísticas de notificaciones
+# ====================================================
 class NotificationStatsSerializer(serializers.Serializer):
     """Serializer para estadísticas de notificaciones"""
     total_notifications = serializers.IntegerField()
@@ -66,6 +88,10 @@ class NotificationStatsSerializer(serializers.Serializer):
     notifications_by_type = serializers.DictField()
     recent_notifications = NotificationSerializer(many=True)
 
+
+# ====================================================
+# Serializer para tipos de notificación
+# ====================================================
 class NotificationTypeSerializer(serializers.Serializer):
     """Serializer para tipos de notificación"""
     value = serializers.CharField()

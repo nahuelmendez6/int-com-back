@@ -6,15 +6,30 @@ from django.contrib.auth import get_user_model
 from .models import Notification, NotificationSettings
 from .serializers import NotificationSerializer
 
+
+
+# ====================================================
+# Servicio de Notificaciones
+# ====================================================
 class NotificationService:
     """Servicio para manejar notificaciones en tiempo real"""
     
     def __init__(self):
         self.channel_layer = get_channel_layer()
     
+    # ====================================================
+    # Envío de notificación individual
+    # ====================================================
     def send_notification(self, user_id, title, message, notification_type='general', 
                          related_postulation_id=None, related_petition_id=None, metadata=None):
-        """Envía una notificación a un usuario específico"""
+        """
+        Envía una notificación a un usuario específico.
+
+        - Verifica si el usuario existe.
+        - Respeta la configuración de notificaciones del usuario.
+        - Crea la notificación en la base de datos.
+        - Envía por WebSocket si el usuario tiene habilitado push_notifications.
+        """
         try:
             User = get_user_model()
             user = User.objects.get(id_user=user_id)
@@ -46,9 +61,16 @@ class NotificationService:
         except get_user_model().DoesNotExist:
             return None
     
+    # ====================================================
+    # Envío de notificaciones masivas
+    # ====================================================
     def send_bulk_notification(self, user_ids, title, message, notification_type='general', 
                               related_postulation_id=None, related_petition_id=None, metadata=None):
-        """Envía una notificación a múltiples usuarios"""
+        """
+        Envía la misma notificación a múltiples usuarios.
+
+        Retorna la lista de notificaciones creadas.
+        """
         notifications = []
         for user_id in user_ids:
             notification = self.send_notification(
@@ -59,8 +81,14 @@ class NotificationService:
                 notifications.append(notification)
         return notifications
     
+    # ====================================================
+    # Validación de configuración de notificaciones
+    # ====================================================
     def _is_notification_enabled(self, settings, notification_type):
-        """Verifica si un tipo de notificación está habilitado para el usuario"""
+        """
+        Comprueba si un tipo de notificación está habilitado para el usuario
+        según sus preferencias en NotificationSettings.
+        """
         type_mapping = {
             'postulation_created': settings.postulation_created,
             'postulation_state_changed': settings.postulation_state_changed,
@@ -70,8 +98,14 @@ class NotificationService:
         }
         return type_mapping.get(notification_type, True)
     
+    # ====================================================
+    # Envío de notificación por WebSocket
+    # ====================================================
     def _send_websocket_notification(self, user_id, notification):
-        """Envía la notificación por WebSocket"""
+        """
+        Envía la notificación en tiempo real al grupo del usuario
+        usando Channels y WebSocket.
+        """
         if not self.channel_layer:
             return
         
@@ -92,8 +126,16 @@ class NotificationService:
             }
         )
     
+    # ====================================================
+    # Marcar notificación como leída
+    # ====================================================
     def mark_notification_as_read(self, notification_id, user_id):
-        """Marca una notificación como leída y notifica por WebSocket"""
+        """
+        Marca una notificación como leída.
+
+        - Actualiza el campo is_read y read_at en DB.
+        - Envía la actualización al cliente por WebSocket.
+        """
         try:
             notification = Notification.objects.get(id=notification_id, user_id=user_id)
             notification.mark_as_read()
@@ -116,8 +158,15 @@ class NotificationService:
         except Notification.DoesNotExist:
             return False
     
+    # ====================================================
+    # Eliminar notificación
+    # ====================================================
     def delete_notification(self, notification_id, user_id):
-        """Elimina una notificación y notifica por WebSocket"""
+        """
+        Elimina una notificación de la base de datos.
+
+        - Notifica al cliente por WebSocket sobre la eliminación.
+        """
         try:
             notification = Notification.objects.get(id=notification_id, user_id=user_id)
             notification.delete()
@@ -138,6 +187,7 @@ class NotificationService:
             return True
         except Notification.DoesNotExist:
             return False
-
-# Instancia global del servicio
+# ====================================================
+# Instancia global del servicio de notificaciones
+# ====================================================
 notification_service = NotificationService()

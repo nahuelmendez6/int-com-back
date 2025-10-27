@@ -5,8 +5,20 @@ from django.contrib.auth import get_user_model
 
 
 class NotificationConsumer(AsyncWebsocketConsumer):
+    """
+    WebSocket consumer para notificaciones en tiempo real.
+
+    Funcionalidad:
+    - Conectar un usuario al canal de notificaciones.
+    - Enviar notificaciones nuevas, actualizadas o eliminadas.
+    - Marcar notificaciones como leídas.
+    - Consultar número de notificaciones no leídas.
+    """
     async def connect(self):
-        """Conecta al WebSocket y se une al grupo del usuario"""
+        """
+        Conecta al WebSocket y se une al grupo correspondiente al usuario.
+        Envía la cantidad de notificaciones no leídas al conectar.
+        """
         self.user_id = self.scope['url_route']['kwargs']['user_id']
         self.user_group_name = f'notifications_{self.user_id}'
         
@@ -32,14 +44,22 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         }))
 
     async def disconnect(self, close_code):
-        """Desconecta del WebSocket y sale del grupo"""
+        """
+        Desconecta del WebSocket y sale del grupo del usuario.
+        """
         await self.channel_layer.group_discard(
             self.user_group_name,
             self.channel_name
         )
 
     async def receive(self, text_data):
-        """Recibe mensajes del WebSocket"""
+        """
+        Recibe mensajes desde el WebSocket.
+
+        Tipos de mensajes soportados:
+        - mark_as_read: marca una notificación específica como leída.
+        - get_unread_count: solicita el número de notificaciones no leídas.
+        """
         try:
             text_data_json = json.loads(text_data)
             message_type = text_data_json.get('type')
@@ -60,9 +80,13 @@ class NotificationConsumer(AsyncWebsocketConsumer):
                 'type': 'error',
                 'message': 'Invalid JSON'
             }))
-
+    # ====================================================
+    # Métodos para enviar notificaciones desde el backend
+    # ====================================================
     async def notification_created(self, event):
-        """Envía una nueva notificación al cliente"""
+        """
+        Envía al cliente una notificación recién creada.
+        """
         await self.send(text_data=json.dumps({
             'type': 'notification_created',
             'notification': event['notification'],
@@ -78,15 +102,23 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         }))
 
     async def notification_deleted(self, event):
-        """Envía información sobre una notificación eliminada al cliente"""
+        """
+        Envía información sobre una notificación eliminada.
+        """
         await self.send(text_data=json.dumps({
             'type': 'notification_deleted',
             'notification_id': event['notification_id'],
             'unread_count': event['unread_count']
         }))
-
+    # ====================================================
+    # Métodos auxiliares sincronizados a la base de datos
+    # ====================================================
     @database_sync_to_async
     def get_user(self, user_id):
+        """
+        Obtiene un usuario por ID.
+        Devuelve None si no existe.
+        """
         User = get_user_model()
         try:
             return User.objects.get(pk=user_id)

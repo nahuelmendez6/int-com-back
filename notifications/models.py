@@ -5,7 +5,14 @@ from django.utils import timezone
 
 from django.conf import settings
 
+# ====================================================
+# Enum: NotificationType
+# ====================================================
 class NotificationType(models.TextChoices):
+    """
+    Tipos de notificaciones disponibles en la plataforma.
+    Sirve para clasificar la notificación y filtrar según tipo.
+    """
     POSTULATION_CREATED = 'postulation_created', 'Nueva Postulación'
     POSTULATION_STATE_CHANGED = 'postulation_state_changed', 'Estado de Postulación Cambiado'
     POSTULATION_ACCEPTED = 'postulation_accepted', 'Postulación Aceptada'
@@ -13,7 +20,14 @@ class NotificationType(models.TextChoices):
     PETITION_CLOSED = 'petition_closed', 'Petición Cerrada'
     GENERAL = 'general', 'General'
 
+# ====================================================
+# Modelo: Notification
+# ====================================================
 class Notification(models.Model):
+    """
+    Modelo que representa una notificación enviada a un usuario.
+    Puede estar relacionada con postulations o petitions.
+    """
     user = models.ForeignKey(settings.AUTH_USER_MODEL, 
                              on_delete=models.CASCADE, 
                              related_name='notifications',
@@ -54,8 +68,14 @@ class Notification(models.Model):
     def __str__(self):
         return f"{self.title} → {self.user.username}"
 
+# ====================================================
+# Modelo: NotificationSettings
+# ====================================================
 class NotificationSettings(models.Model):
-    """Configuración de notificaciones por usuario"""
+    """
+    Configuración de notificaciones por usuario.
+    Permite activar/desactivar notificaciones por tipo y método (email/push).
+    """
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, 
         on_delete=models.CASCADE,
