@@ -11,7 +11,7 @@ from .serializers import (
     CreateMessageSerializer
 )
 
-class ConversationViewSewt(viewsets.ViewSet):
+class ConversationViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
 
     def list(self, request):
@@ -46,7 +46,7 @@ class ConversationViewSewt(viewsets.ViewSet):
 
         if not conversation:
             conversation = Conversation.objects.create()
-            conversation.participants.set([request.user.id, other_user_id])
+            conversation.participants.set([request.user.id_user, other_user_id])
 
         serializer = ConversationSerializer(conversation, context={'request': request})
         return Response(serializer.data, status=201)

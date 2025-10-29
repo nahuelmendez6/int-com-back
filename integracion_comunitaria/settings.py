@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'hires',
     'grades',
     'notifications',
+    'chat',
 
 ]
 

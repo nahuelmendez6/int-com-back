@@ -4,7 +4,7 @@ from django.conf import settings
 class Conversation(models.Model):
 
     id_conversation = models.AutoField(primary_key=True)
-    partipants = models.ManyToManyField(
+    participants = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         related_name='conversations'
     )
