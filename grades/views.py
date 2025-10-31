@@ -5,9 +5,13 @@ from .models import GradeProvider, GradeCustomer
 from .serializers import GradeProviderSerializer, GradeProviderWriteSerializer, GradeCustomerSerializer, GradeCustomerWriteSerializer
 from django.db import connection
 
+
+
 # ====================================================
 # API para listar y crear calificaciones de Provider
 # ====================================================
+
+
 class GradeProviderAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -94,31 +98,34 @@ class ProviderAverageRatingView(APIView):
 
 
 
+
+# ====================================================
+# API para listar y crear calificaciones de Customer
+# ====================================================
+
 class GradeCustomerAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         """
         Listar todas las calificaciones visibles.
-        Opcionalmente filtrar por provider: ?provider=<id>
+        Opcionalmente filtrar por cliente: ?customer=<id>
         """
-        provider_id = request.query_params.get('provider')
+        customer_id = request.query_params.get('customer')
         queryset = GradeCustomer.objects.filter(is_visible=True)
-        if provider_id:
-            queryset = queryset.filter(provider_id=provider_id)
+        if customer_id:
+            queryset = queryset.filter(customer_id=customer_id)
         queryset = queryset.order_by('-date_create')
-
         serializer = GradeCustomerSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
+    
     def post(self, request):
         """
-        Crear nueva calificación de cliente hacia un proveedor.
-        Se asignan automáticamente los campos de usuario y cliente.
+        Crear nueva calificación.
+        Se asigna automáticamente el provider y los campos user_create/user_update.
         """
         data = request.data.copy()
-        # El customer es el usuario autenticado (suponiendo que es un cliente)
-        data['customer'] = request.user.id_user  
+        data['provider'] = request.user.id_user
         data['user_create'] = request.user.id_user
         data['user_update'] = request.user.id_user
 

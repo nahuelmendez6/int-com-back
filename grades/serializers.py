@@ -1,9 +1,7 @@
 from rest_framework import serializers
-from .models import Grade, GradeProvider, GradeCustomer
-from authentication.models import Provider, User
+from .models import Grade, GradeCustomer, GradeProvider
+from authentication.models import User
 
-
-# Serializer simple para Grade
 
 # ====================================================
 # Serializer simple para el modelo Grade
@@ -14,53 +12,56 @@ class GradeSerializer(serializers.ModelSerializer):
         fields = ['id_grade', 'name', 'description', 'value']
 
 
-
-
 # ====================================================
-# Serializer para Customer / User (quien realizó la calificación)
+# Serializer para usuario (tanto customer como provider)
 # ====================================================
-class CustomerSerializer(serializers.ModelSerializer):
+class UserBasicSerializer(serializers.ModelSerializer):
     profile_image = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id_user', 'first_name', 'last_name', 'profile_image']
+        fields = ['id_user', 'name', 'lastname', 'profile_image']
 
     def get_profile_image(self, obj):
-        # Maneja ImageField o varchar (ruta)
-        if not obj.profile_image:
-            return None
-        if hasattr(obj.profile_image, 'url'):
-            return obj.profile_image.url
-        return str(obj.profile_image)
+        if obj.profile_image:
+            if hasattr(obj.profile_image, 'url'):
+                return obj.profile_image.url
+            return str(obj.profile_image)
+        return None
 
 
 # ====================================================
-# Serializer para Provider
+# Serializer principal para GradeCustomer (lectura)
 # ====================================================
-class ProviderSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source='user.name', read_only=True)
-    lastname = serializers.CharField(source='user.lastname', read_only=True)
-    profile_image = serializers.ImageField(source='user.profile_image',read_only=True)
+class GradeCustomerSerializer(serializers.ModelSerializer):
+    provider = UserBasicSerializer()
+    customer = UserBasicSerializer()
+    #grade = GradeSerializer()
 
     class Meta:
-        model = Provider
-        fields = ['id_provider', 'name', 'lastname', 'profession', 'profile_image']
-
-    def get_profile_image(self, obj):
-        if obj.user and obj.user.profile_image:
-            if hasattr(obj.user.profile_image, 'url'):
-                return obj.user.profile_image.url
-            return str(obj.user.profile_image)
-        return None
+        model = GradeCustomer
+        fields = [
+            'id_grade_customer',
+            'provider',
+            'customer',
+            #'grade',
+            'rating',
+            'comment',
+            'response',
+            'is_visible',
+            'user_create',
+            'user_update',
+            'date_create',
+            'date_update',
+        ]
 
 
 # ====================================================
 # Serializer principal para GradeProvider (lectura)
 # ====================================================
 class GradeProviderSerializer(serializers.ModelSerializer):
-    provider = ProviderSerializer()
-    customer = CustomerSerializer()
+    provider = UserBasicSerializer()
+    customer = UserBasicSerializer()
     grade = GradeSerializer()
 
     class Meta:
@@ -74,44 +75,22 @@ class GradeProviderSerializer(serializers.ModelSerializer):
             'coment',
             'response',
             'is_visible',
+            'user_create',
+            'user_update',
             'date_create',
             'date_update',
         ]
 
 
 # ====================================================
-# Serializer principal para GradeCustomer (lectura)
-# ====================================================
-class GradeCustomerSerializer(serializers.ModelSerializer):
-    provider = ProviderSerializer()
-    customer = CustomerSerializer()
-    grade = GradeSerializer()
-
-    class Meta:
-        model = GradeCustomer
-        fields = [
-            'customer',
-            'provider',
-            'grade',
-            'rating',
-            'comment',
-            'response',
-            'is_visible',
-            'user_create',
-            'user_update',
-        ]
-
-# ====================================================
 # Serializer para crear/actualizar GradeCustomer
 # ====================================================
 class GradeCustomerWriteSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = GradeCustomer
         fields = [
-            'customer',
             'provider',
-            'grade',
+            'customer',
             'rating',
             'comment',
             'response',
@@ -132,7 +111,7 @@ class GradeProviderWriteSerializer(serializers.ModelSerializer):
             'customer',
             'grade',
             'rating',
-            'coment',
+            'comment',
             'response',
             'is_visible',
             'user_create',
