@@ -18,6 +18,7 @@ urlpatterns = [
     
     path('materials/<int:id_material>/', MaterialDetailAPIView.as_view(), name='material-detail'),
     path('materials/', MaterialAPIView.as_view(), name='material'),
+    path('materials/<int:id_provider>', MaterialAPIView.as_view(), name='material-provider'),
     path('material-attachment/', MaterialAttachmentAPIView.as_view(), name='material-attachment'),
     path('material-attachment/<int:id_material_attachment>/', MaterialAttachmentDetailAPIView.as_view(), name='material-attachment')
 
