@@ -1,24 +1,34 @@
 """
-URL configuration for integracion_comunitaria project.
+Configuración de URLs principal del proyecto **integracion_comunitaria**.
 
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+Este archivo define el enrutamiento global de la aplicación, conectando las URLs
+principales del proyecto con las URLConfs de cada aplicación interna.
+
+Más información:
+https://docs.djangoproject.com/en/5.2/topics/http/urls/
+
+Ejemplos:
+    - Funciones basadas en vistas:
+        from my_app import views
+        path('', views.home, name='home')
+    - Vistas basadas en clases:
+        from other_app.views import Home
+        path('', Home.as_view(), name='home')
+    - Inclusión de otras URLConfs:
+        from django.urls import include, path
+        path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
 
+
+# -----------------------------------------------------------
+# URLPATTERNS PRINCIPALES
+# -----------------------------------------------------------
+# Cada entrada en esta lista asocia una URL base con las rutas internas
+# definidas en las aplicaciones del proyecto.
 urlpatterns = [
     path('admin/', admin.site.urls),
 
