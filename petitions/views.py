@@ -117,16 +117,19 @@ class PetitionAPIView(APIView):
         if serializer.is_valid():
             petition = serializer.save(id_customer=request.user.customer.id_customer)
 
-            # Crear categorías
-            for cat in request.data.get("categories", []):
-                # cat puede ser un dict o un string con id_category
-                id_category = cat
+            # Crear categorías - CORRECCIÓN: usar getlist() para obtener todos los valores
+            categories_list = request.data.getlist("categories")  # Cambio aquí
+            for cat in categories_list:
+                # cat viene como string desde FormData, convertir a int
+                id_category = int(cat) if isinstance(cat, str) else cat
                 if isinstance(cat, dict):
-                    id_category = cat.get("id_category")
-                PetitionCategory.objects.create(
-                    id_petition=petition,
-                    id_category_id=id_category
-                )
+                    id_category = int(cat.get("id_category")) if cat.get("id_category") else None
+                
+                if id_category:
+                    PetitionCategory.objects.create(
+                        id_petition=petition,
+                        id_category_id=id_category
+                    )
 
             # Crear adjuntos
             for att in request.FILES.getlist("attachments"):
@@ -155,24 +158,32 @@ class PetitionAPIView(APIView):
     def patch(self, request, pk):
         """
         PATCH: Actualizar una petición existente y sus relaciones anidadas
-        - Se soporta actualización parcial
-        - Actualiza categorías, adjuntos y materiales si se envían
         """
         petition = get_object_or_404(Petition, pk=pk)
         serializer = PetitionSerializer(petition, data=request.data, partial=True)
         if serializer.is_valid():
             petition = serializer.save()
 
-            # Actualizar categorías
+            # Actualizar categorías - CORRECCIÓN: usar getlist()
             if "categories" in request.data:
                 PetitionCategory.objects.filter(id_petition=petition).delete()
-                categories_list = request.data.get("categories", [])
+                categories_list = request.data.getlist("categories")  # Cambio aquí
                 for cat in categories_list:
-                    id_category = cat.get("id_category") if isinstance(cat, dict) else cat
-                    PetitionCategory.objects.create(
-                        id_petition=petition,
-                        id_category_id=id_category
-                    )
+                    # Convertir string a int si es necesario
+                    if isinstance(cat, str):
+                        id_category = int(cat)
+                    elif isinstance(cat, dict):
+                        id_category = int(cat.get("id_category")) if cat.get("id_category") else None
+                    else:
+                        id_category = int(cat) if cat else None
+                    
+                    if id_category:
+                        PetitionCategory.objects.create(
+                            id_petition=petition,
+                            id_category_id=id_category
+                        )
+
+        # ... resto del código igual
 
             # Actualizar adjuntos
             if "attachments" in request.FILES:
