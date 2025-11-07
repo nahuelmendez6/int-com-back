@@ -217,6 +217,8 @@ class ProviderPetitionsFeedAPIView(APIView):
         GET: Devuelve todas las peticiones que coinciden con el perfil del proveedor
         """
         user = request.user
+
+
         
         try:
             provider = Provider.objects.filter(user=request.user).first()
@@ -224,7 +226,15 @@ class ProviderPetitionsFeedAPIView(APIView):
         except Provider.DoesNotExist:
             return Response({'detail':'El usuario no es un proveedor'}, status=status.HTTP_403_FORBIDDEN)
 
+
+
+        print("Proveedor:", provider)
+        print("ID proveedor:", provider.id_provider)
+        print("Categorías del proveedor:", list(provider.categories.values_list('name', flat=True)))
+        print("Tipo de proveedor:", getattr(provider.type_provider, 'name', None))
+
         petitions = filter_petitions_for_provider(provider)
+        print(petitions)
         serializer = PetitionSerializer(petitions, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)

@@ -21,6 +21,11 @@ def filter_offers_for_customer_by_city_interest(customer):
     # 2) ciudad del cliente (instancia de City) o None
     customer_city = getattr(customer.address, 'city', None)
 
+    if not customer_city or not category_ids_qs.exists():
+        # si no hay ciudad o categorías de interés, no hay ofertas relevantes
+        return Offer.objects.none()
+    
+    
     # 3) ofertas base: no eliminadas, activas y dentro del rango de fechas
     now = timezone.now()
     qs = Offer.objects.filter(

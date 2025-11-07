@@ -6,6 +6,12 @@ from authentication.models import Customer, Provider
 # FUNCIÓN: filter_petitions_for_provider
 # ====================================================
 def filter_petitions_for_provider(provider):
+    print("---- FILTRO DE PETICIONES ----")
+    print("Proveedor:", provider)
+    print("Profesión:", provider.profession)
+    print("Tipo proveedor:", provider.type_provider)
+    print("Categorías:", list(provider.categories.values_list("name", flat=True)))
+    print("Ciudades:", list(provider.cities.values_list("name", flat=True)))
     """
     Filtra las peticiones disponibles para un proveedor según su perfil.
     
@@ -19,7 +25,7 @@ def filter_petitions_for_provider(provider):
 
      # Obtener todas las peticiones activas (no borradas)
     qs = Petition.objects.filter(is_deleted=False)
-
+    print("Peticiones iniciales:", qs.count())
     # ------------------------------------------------
     # Filtrar por profesión del proveedor
     # Si la petición especifica una profesión, debe coincidir con la del proveedor.
@@ -28,7 +34,7 @@ def filter_petitions_for_provider(provider):
     qs = qs.filter(
         Q(id_profession=provider.profession) | Q(id_profession__isnull=True)
     )
-
+    print("Tras profesión:", qs.count())
     # ------------------------------------------------
     # Filtrar por tipo de proveedor
     # Similar al filtro de profesión: se incluye si coincide o si no se especifica
@@ -36,14 +42,14 @@ def filter_petitions_for_provider(provider):
     qs = qs.filter(
         Q(id_type_provider=provider.type_provider) | Q(id_type_provider__isnull=True)
     )
-
+    print("Tras tipo proveedor:", qs.count())
     # ------------------------------------------------
     # Filtrar por categorías del proveedor
     # Si el proveedor tiene categorías asignadas, la petición debe tener al menos una coincidencia
     # ------------------------------------------------
-    if provider.categories.exists():
-        qs = qs.filter(categories__in=provider.categories.all())
-
+    #if provider.categories.exists():
+    #    qs = qs.filter(categories__in=provider.categories.all())
+    #    print("Tras categorías:", qs.count())
 
     # ------------------------------------------------
     # Filtrar por zonas geográficas (ciudades del proveedor)
@@ -54,5 +60,6 @@ def filter_petitions_for_provider(provider):
             address__city__in=provider.cities.all()
         ).values('id_customer')
         qs = qs.filter(id_customer__in=Subquery(customer_ids))
-
+        print("Tras ciudades:", qs.count())
+    print("Final:", qs.count())
     return qs.distinct()
