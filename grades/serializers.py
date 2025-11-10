@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import Grade, GradeCustomer, GradeProvider
 from authentication.models import User
-
+from django.conf import settings
 
 # ====================================================
 # Serializer simple para el modelo Grade
@@ -24,9 +24,21 @@ class UserBasicSerializer(serializers.ModelSerializer):
 
     def get_profile_image(self, obj):
         if obj.profile_image:
-            if hasattr(obj.profile_image, 'url'):
-                return obj.profile_image.url
-            return str(obj.profile_image)
+            image_str = str(obj.profile_image).strip()
+
+            # 🔧 Normalizar posibles URLs mal formadas (https:/ -> https://)
+            if image_str.startswith("https:/") and not image_str.startswith("https://"):
+                image_str = image_str.replace("https:/", "https://", 1)
+            elif image_str.startswith("http:/") and not image_str.startswith("http://"):
+                image_str = image_str.replace("http:/", "http://", 1)
+
+            # 🔹 Si ya es URL externa
+            if image_str.startswith("http"):
+                return image_str
+
+            # 🔹 Si es un archivo local
+            return f"{settings.MEDIA_URL}{image_str}"
+
         return None
 
 

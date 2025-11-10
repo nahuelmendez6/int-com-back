@@ -103,7 +103,7 @@ class ProviderAverageRatingView(APIView):
             cursor.execute("""
                 SELECT AVG(rating) as avg_rating
                 FROM n_grade_provider
-                WHERE id_provider = %s
+                WHERE id_user = %s
             """, [provider_id])
             row = cursor.fetchone()  # Solo un resultado
 
