@@ -1,7 +1,10 @@
 from rest_framework import serializers
 from postulations.models import Postulation, PostulationBudget
+from postulations.serializers import PostulationBudgetSerializer
 from petitions.models import Petition
 from authentication.models import Customer, Provider
+from portfolio.serializers import MaterialSerializer, PostulationMaterialSerializer
+from postulations.models import PostulationMaterial
 
 # ====================================================
 # Serializer para la contratación (Hire)
@@ -16,6 +19,8 @@ class HireSerializer(serializers.ModelSerializer):
     provider = serializers.SerializerMethodField()
     approved_at = serializers.DateTimeField(source='date_update', read_only=True)
     final_price = serializers.SerializerMethodField()
+    budget = serializers.SerializerMethodField()
+    materials = serializers.SerializerMethodField()
 
     class Meta:
         model = Postulation
@@ -27,6 +32,8 @@ class HireSerializer(serializers.ModelSerializer):
             'provider',
             'approved_at',
             'final_price',
+            'budget',
+            'materials',
         ]
 
     # ====================================================
@@ -85,11 +92,40 @@ class HireSerializer(serializers.ModelSerializer):
     def get_final_price(self, obj):
         """
         Obtiene el precio final de la postulación desde PostulationBudget.
-        Retorna el monto o None si no existe presupuesto.
+        Retorna el monto total o None si no existe presupuesto.
+        Si hay múltiples presupuestos, suma todos los amounts.
         """
-        budget = PostulationBudget.objects.filter(id_postulation=obj.id_postulation).first()
-        return budget.amount if budget else None
+        budgets = PostulationBudget.objects.filter(id_postulation=obj.id_postulation)
+        if budgets.exists():
+            # Sumar todos los amounts que no sean None
+            from decimal import Decimal
+            total = sum(
+                Decimal(str(b.amount)) 
+                for b in budgets 
+                if b.amount is not None
+            )
+            return float(total) if total > 0 else None
+        return None
 
+    # Budget
+    def get_budget(self, obj):
+        """
+        Obtiene información completa del presupuesto de la postulación.
+        Retorna una lista con todos los presupuestos asociados a la postulación.
+        """
+        budgets = PostulationBudget.objects.filter(id_postulation=obj.id_postulation)
+        if budgets.exists():
+            return PostulationBudgetSerializer(budgets, many=True).data
+        return []
+    
+    def get_materials(self, obj):
+        """
+        Retorna los materiales asociados a la postulacion, si existen.
+        """
+        materials = PostulationMaterial.objects.filter(id_postulation=obj.id_postulation)
+        if materials.exists():
+            return PostulationMaterialSerializer(materials, many=True).data
+        return []
 
 
     # ====================================================
@@ -109,3 +145,5 @@ class HireSerializer(serializers.ModelSerializer):
         
         # si es un texto
         return str(user.profile_image)
+
+

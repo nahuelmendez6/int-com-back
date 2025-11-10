@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
+from authentication.models import User, Customer, Provider
 from .models import GradeProvider, GradeCustomer
 from .serializers import GradeProviderSerializer, GradeProviderWriteSerializer, GradeCustomerSerializer, GradeCustomerWriteSerializer
 from django.db import connection
@@ -34,6 +35,22 @@ class GradeProviderAPIView(APIView):
         Se asigna automáticamente el customer y los campos user_create/user_update.
         """
         data = request.data.copy()
+
+        if 'provider' in data:
+            try:
+                provider_obj = Provider.objects.get(id_provider=data['provider'])
+                data['provider'] = provider_obj.user.id_user
+            except Provider.DoesNotExist:
+                return Response(
+                    {'provider':['El proveedor especificado no existe']},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            except AttributeError:
+                return Response(
+                    {'provider': ['El proveedor no tiene usuario asociado.']},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
         data['customer'] = request.user.id_user
         data['user_create'] = request.user.id_user
         data['user_update'] = request.user.id_user
@@ -125,6 +142,22 @@ class GradeCustomerAPIView(APIView):
         Se asigna automáticamente el provider y los campos user_create/user_update.
         """
         data = request.data.copy()
+
+        if 'customer' in data:
+            try:
+                customer_obj = Customer.objects.get(id_customer=data['customer'])
+                if not hasattr(customer_obj, 'user') or not customer_obj.user:
+                    return Response(
+                        {'customer': ['El cliente no tiene usuario asociado.']},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                data['customer'] = customer_obj.user.id_user  # Usamos el id_user del cliente
+            except Customer.DoesNotExist:
+                return Response(
+                    {'customer': ['El cliente especificado no existe.']},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
         data['provider'] = request.user.id_user
         data['user_create'] = request.user.id_user
         data['user_update'] = request.user.id_user

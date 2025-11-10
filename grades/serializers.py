@@ -111,7 +111,7 @@ class GradeProviderWriteSerializer(serializers.ModelSerializer):
             'customer',
             'grade',
             'rating',
-            'comment',
+            'coment',
             'response',
             'is_visible',
             'user_create',

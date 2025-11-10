@@ -4,12 +4,15 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
+from django.contrib.auth import get_user_model
 from .models import Conversation, Message
 from .serializers import (
     ConversationSerializer,
     MessageSerializer,
     CreateMessageSerializer
 )
+
+User = get_user_model()
 
 class ConversationViewSet(viewsets.ViewSet):
     """
@@ -36,8 +39,8 @@ class ConversationViewSet(viewsets.ViewSet):
         Returns:
             Response: Lista serializada de conversaciones del usuario.
         """
-        converstions = Conversation.objects.filter(participants=request.user).distinct()
-        serializer = ConversationSerializer(converstions, many=True, context={'request': request})
+        conversations = Conversation.objects.filter(participants=request.user).distinct()
+        serializer = ConversationSerializer(conversations, many=True, context={'request': request})
         return Response(serializer.data)
     
     
@@ -72,16 +75,26 @@ class ConversationViewSet(viewsets.ViewSet):
         if not other_user_id:
             return Response({'error': 'user_id es requerido'}, status=400)
         
+        # Obtener el objeto User del otro usuario
+        try:
+            other_user = User.objects.get(id_user=other_user_id)
+        except User.DoesNotExist:
+            return Response({'error': 'Usuario no encontrado'}, status=404)
+        
+        # Verificar que no sea el mismo usuario
+        if other_user.id_user == request.user.id_user:
+            return Response({'error': 'No puedes iniciar una conversación contigo mismo'}, status=400)
+        
         # Buscar si ya existe una conversación entre ambos
         conversation = Conversation.objects.filter(
             participants=request.user
         ).filter(
-            participants=other_user_id
+            participants=other_user
         ).distinct().first()
 
         if not conversation:
             conversation = Conversation.objects.create()
-            conversation.participants.set([request.user.id_user, other_user_id])
+            conversation.participants.set([request.user, other_user])
 
         serializer = ConversationSerializer(conversation, context={'request': request})
         return Response(serializer.data, status=201)

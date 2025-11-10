@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import PostulationAPIView, PostulationMaterialAPIView
+from .views import PostulationAPIView, PostulationMaterialAPIView, PostulationStatisticsAPIView
 
 urlpatterns = [
     # Listado de todas las postulaciones del proveedor
@@ -11,6 +11,10 @@ urlpatterns = [
 
     # Listado de postulaciones de una petición específica (para clientes)
     path('by-petition/<int:id_petition>/', PostulationAPIView.as_view(), name='postulation-by-petition'),
+    
+    # Estadísticas de postulaciones para proveedores
+    path('statistics/', PostulationStatisticsAPIView.as_view(), name='postulation-statistics'),
+    
     path('materials/', PostulationMaterialAPIView.as_view(), name='postulation_material_create'),
     path('materials/<int:id_postulation>/', PostulationMaterialAPIView.as_view(), name='postulation_material_list'),
     path('materials/item/<int:pk>/', PostulationMaterialAPIView.as_view(), name='postulation_material_detail'),

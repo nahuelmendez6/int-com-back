@@ -62,7 +62,7 @@ class GradeProvider(models.Model):
     customer = models.ForeignKey(User, on_delete=models.CASCADE, db_column='id_customer')  # cliente que califica
     grade = models.ForeignKey(Grade, on_delete=models.CASCADE, db_column='id_grade')
     rating = models.PositiveSmallIntegerField(blank=True, null=True)
-    coment = models.CharField(max_length=255)
+    coment = models.CharField(max_length=255, blank=True, null=True)
     response = models.CharField(max_length=255, blank=True, null=True)
     is_visible = models.BooleanField(default=True)
     user_create = models.ForeignKey(User, on_delete=models.CASCADE, related_name='gradeprovider_created', db_column='id_user_create')

@@ -1,7 +1,9 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
+from django.db.models import Count
 
 from .models import (
     Postulation,
@@ -263,4 +265,90 @@ class PostulationMaterialAPIView(APIView):
 
         material.delete()
         return Response({"detail": "Material eliminado correctamente."}, status=status.HTTP_204_NO_CONTENT)
+
+
+# ====================================================
+# API VIEW: PostulationStatisticsAPIView
+# ====================================================
+class PostulationStatisticsAPIView(APIView):
+    """
+    API para obtener estadísticas de postulaciones de un proveedor.
+    Devuelve información sobre postulaciones aprobadas, rechazadas, pendientes, etc.
+    """
+    
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """
+        Obtiene estadísticas de postulaciones del proveedor autenticado.
+        
+        Returns:
+            Response: Estadísticas de postulaciones con conteos por estado.
+        """
+        provider = getattr(request.user, 'provider', None)
+        if not provider:
+            return Response(
+                {"detail": "Solo los proveedores pueden acceder a estas estadísticas."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Obtener todas las postulaciones del proveedor (excluyendo eliminadas)
+        postulations = Postulation.objects.filter(
+            id_provider=provider.id_provider,
+            is_deleted=False
+        )
+
+        # IDs de estados según la base de datos:
+        # 1: Pendiente
+        # 2: Aprobada
+        # 3: Rechazada
+        # 4: Ganadora
+        
+        # Contar por categorías usando IDs específicos
+        total = postulations.count()
+        pending_count = postulations.filter(id_state_id=1).count()
+        approved_count = postulations.filter(id_state_id=2).count()
+        rejected_count = postulations.filter(id_state_id=3).count()
+        winner_count = postulations.filter(id_state_id=4).count()
+        
+        # Contar por cada estado individual
+        state_counts = postulations.values('id_state__name', 'id_state__id_state').annotate(
+            count=Count('id_postulation')
+        ).order_by('-count')
+
+        # Calcular porcentajes
+        approved_percentage = (approved_count / total * 100) if total > 0 else 0
+        rejected_percentage = (rejected_count / total * 100) if total > 0 else 0
+        pending_percentage = (pending_count / total * 100) if total > 0 else 0
+        winner_percentage = (winner_count / total * 100) if total > 0 else 0
+
+        # Estadísticas adicionales
+        recent_postulations = postulations.order_by('-date_create')[:5].values(
+            'id_postulation', 'id_petition', 'id_state__name', 'date_create', 'winner'
+        )
+
+        return Response({
+            'summary': {
+                'total': total,
+                'approved': approved_count,
+                'rejected': rejected_count,
+                'pending': pending_count,
+                'winners': winner_count,
+                'percentages': {
+                    'approved': round(approved_percentage, 2),
+                    'rejected': round(rejected_percentage, 2),
+                    'pending': round(pending_percentage, 2),
+                    'winners': round(winner_percentage, 2),
+                }
+            },
+            'by_state': [
+                {
+                    'state_id': item['id_state__id_state'],
+                    'state_name': item['id_state__name'],
+                    'count': item['count']
+                }
+                for item in state_counts
+            ],
+            'recent_postulations': list(recent_postulations)
+        }, status=status.HTTP_200_OK)
 

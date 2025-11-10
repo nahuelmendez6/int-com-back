@@ -14,6 +14,7 @@ from .views import (
 
     UserProfileAPIView,
 )
+from .dashboard_views import DashboardAPIView
 
 # ====================================
 # ROUTER DE DRF
@@ -57,4 +58,9 @@ urlpatterns = [
     # Método: GET/PUT/PATCH según la implementación de UserProfileAPIView
     # URL: /user/
     path('user/', UserProfileAPIView.as_view()),
+    
+    # Dashboard endpoint
+    # Método: GET
+    # URL: /dashboard/
+    path('dashboard/', DashboardAPIView.as_view(), name='dashboard'),
 ]

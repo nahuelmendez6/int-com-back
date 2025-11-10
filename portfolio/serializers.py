@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Portfolio, PortfolioAttachment, Material, MaterialAttachment
+from postulations.models import PostulationMaterial
 
 # ====================================================
 # Serializer: PortfolioAttachmentSerializer
@@ -50,3 +51,38 @@ class MaterialAttachmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = MaterialAttachment
         fields = '__all__'
+
+
+
+class PostulationMaterialSerializer(serializers.ModelSerializer):
+    """
+    Serializer para los materiales asociados a una postulación.
+    Incluye la información básica del material y los datos presupuestados.
+    """
+    material = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PostulationMaterial
+        fields = [
+            'id_postulation_material',
+            'material',
+            'quantity',
+            'unit_price',
+            'total',
+            'notes',
+        ]
+
+    def get_material(self, obj):
+        """
+        Retorna la información del Material asociado.
+        """
+        material = obj.id_material
+        if material:
+            return {
+                'id': material.id_material,
+                'name': material.name,
+                'description': getattr(material, 'description', None),
+                'unit': getattr(material, 'unit', None),
+                'category': getattr(material, 'category', None),
+            }
+        return None

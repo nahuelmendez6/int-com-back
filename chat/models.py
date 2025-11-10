@@ -39,7 +39,7 @@ class Conversation(models.Model):
         Returns:
             str: Cadena con el ID de la conversación y los correos de los participantes.
         """
-        participants = ", ".join([u.email for u in self.partipants.all()])
+        participants = ", ".join([u.email for u in self.participants.all()])
         return f"Conversación {self.id_conversation} ({participants})"
     
     def get_other_participant(self, user):
@@ -53,7 +53,7 @@ class Conversation(models.Model):
         Returns:
             User | None: El otro participante de la conversación, o None si no existe.
         """
-        return self.partipants.exclude(id_user=user.id_user).first()
+        return self.participants.exclude(id_user=user.id_user).first()
     
 
 class Message(models.Model):
