@@ -1,17 +1,44 @@
-from django.db.models import Q, Subquery
-from .models import Petition
+from django.db.models import Q, Subquery, Prefetch
+from .models import Petition, PetitionCategory, PetitionAttachment, PetitionMaterial, PetitionStateHistory
 from authentication.models import Customer, Provider
 
 # ====================================================
 # FUNCIÓN: filter_petitions_for_provider
 # ====================================================
+def get_petition_base_queryset():
+    """
+    Retorna el queryset base de Petitions con relaciones precargadas para
+    evitar consultas N+1 durante la serialización.
+    """
+    return (
+        Petition.objects.select_related(
+            "id_type_petition",
+            "id_state",
+            "id_profession",
+            "id_type_provider",
+        )
+        .prefetch_related(
+            Prefetch(
+                "petitioncategory_set",
+                queryset=PetitionCategory.objects.select_related("id_category"),
+            ),
+            Prefetch(
+                "petitionattachment_set",
+                queryset=PetitionAttachment.objects.all(),
+            ),
+            Prefetch(
+                "petitionmaterial_set",
+                queryset=PetitionMaterial.objects.all(),
+            ),
+            Prefetch(
+                "petitionstatehistory_set",
+                queryset=PetitionStateHistory.objects.select_related("id_state"),
+            ),
+        )
+    )
+
+
 def filter_petitions_for_provider(provider):
-    print("---- FILTRO DE PETICIONES ----")
-    print("Proveedor:", provider)
-    print("Profesión:", provider.profession)
-    print("Tipo proveedor:", provider.type_provider)
-    print("Categorías:", list(provider.categories.values_list("name", flat=True)))
-    print("Ciudades:", list(provider.cities.values_list("name", flat=True)))
     """
     Filtra las peticiones disponibles para un proveedor según su perfil.
     
@@ -23,9 +50,7 @@ def filter_petitions_for_provider(provider):
     5. Coincidencia geográfica: ciudades del proveedor y clientes
     """
 
-     # Obtener todas las peticiones activas (no borradas)
-    qs = Petition.objects.filter(is_deleted=False)
-    print("Peticiones iniciales:", qs.count())
+    qs = get_petition_base_queryset()
     # ------------------------------------------------
     # Filtrar por profesión del proveedor
     # Si la petición especifica una profesión, debe coincidir con la del proveedor.
@@ -34,7 +59,6 @@ def filter_petitions_for_provider(provider):
     qs = qs.filter(
         Q(id_profession=provider.profession) | Q(id_profession__isnull=True)
     )
-    print("Tras profesión:", qs.count())
     # ------------------------------------------------
     # Filtrar por tipo de proveedor
     # Similar al filtro de profesión: se incluye si coincide o si no se especifica
@@ -42,7 +66,6 @@ def filter_petitions_for_provider(provider):
     qs = qs.filter(
         Q(id_type_provider=provider.type_provider) | Q(id_type_provider__isnull=True)
     )
-    print("Tras tipo proveedor:", qs.count())
     # ------------------------------------------------
     # Filtrar por categorías del proveedor
     # Si el proveedor tiene categorías asignadas, la petición debe tener al menos una coincidencia
@@ -60,6 +83,4 @@ def filter_petitions_for_provider(provider):
             address__city__in=provider.cities.all()
         ).values('id_customer')
         qs = qs.filter(id_customer__in=Subquery(customer_ids))
-        print("Tras ciudades:", qs.count())
-    print("Final:", qs.count())
     return qs.distinct()

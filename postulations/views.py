@@ -3,13 +3,14 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
-from django.db.models import Count
+from django.db.models import Count, Prefetch
 
 from .models import (
     Postulation,
     PostulationState,
     PostulationStateHistory,
-    PostulationMaterial
+    PostulationMaterial,
+    PostulationBudget
 )
 from .serializers import (PostulationSerializer, 
                             PostulationReadSerializer, 
@@ -48,7 +49,18 @@ class PostulationAPIView(APIView):
                 serializer = PostulationSerializer(postulation)
                 return Response(serializer.data, status=status.HTTP_200_OK)
 
-            postulations = Postulation.objects.filter(id_provider=provider.id_provider).order_by('-date_create')
+            postulations = (
+                Postulation.objects.filter(id_provider=provider.id_provider)
+                .select_related('id_state')
+                .prefetch_related(
+                    Prefetch('budgets', queryset=PostulationBudget.objects.all()),
+                    Prefetch(
+                        'materials',
+                        queryset=PostulationMaterial.objects.select_related('id_material')
+                    ),
+                )
+                .order_by('-date_create')
+            )
             serializer = PostulationSerializer(postulations, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -66,7 +78,18 @@ class PostulationAPIView(APIView):
                 serializer = PostulationSerializer(postulation)
                 return Response(serializer.data, status=status.HTTP_200_OK)
 
-            postulations = Postulation.objects.filter(id_petition=id_petition).order_by('-date_create')
+            postulations = (
+                Postulation.objects.filter(id_petition=id_petition)
+                .select_related('id_state')
+                .prefetch_related(
+                    Prefetch('budgets', queryset=PostulationBudget.objects.all()),
+                    Prefetch(
+                        'materials',
+                        queryset=PostulationMaterial.objects.select_related('id_material')
+                    ),
+                )
+                .order_by('-date_create')
+            )
             serializer = PostulationSerializer(postulations, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -117,7 +140,17 @@ class PostulationAPIView(APIView):
 
         # --- Proveedor: actualizar toda la postulación ---
         if provider:
-            postulation = get_object_or_404(Postulation, pk=pk, id_provider=provider.id_provider)
+            postulation = get_object_or_404(
+                Postulation.objects.select_related('id_state').prefetch_related(
+                    Prefetch('budgets', queryset=PostulationBudget.objects.all()),
+                    Prefetch(
+                        'materials',
+                        queryset=PostulationMaterial.objects.select_related('id_material')
+                    ),
+                ),
+                pk=pk,
+                id_provider=provider.id_provider,
+            )
             serializer = PostulationSerializer(postulation, data=request.data, partial=True)
             if serializer.is_valid():
                 serializer.save(id_user_update=request.user.id_user)
@@ -135,7 +168,17 @@ class PostulationAPIView(APIView):
             # validamos que la peticion sea del cliente
             petition = get_object_or_404(Petition, pk=id_petition, id_customer=customer.id_customer)
 
-            postulation = get_object_or_404(Postulation, pk=pk, id_petition=id_petition)
+            postulation = get_object_or_404(
+                Postulation.objects.select_related('id_state').prefetch_related(
+                    Prefetch('budgets', queryset=PostulationBudget.objects.all()),
+                    Prefetch(
+                        'materials',
+                        queryset=PostulationMaterial.objects.select_related('id_material')
+                    ),
+                ),
+                pk=pk,
+                id_petition=id_petition,
+            )
 
             new_state_id = request.data.get('id_state')
             if not new_state_id:

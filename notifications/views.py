@@ -46,14 +46,16 @@ def notification_stats(request):
     total_notifications = Notification.objects.filter(user=user).count()
     unread_notifications = Notification.objects.filter(user=user, is_read=False).count()
     
-    # Notificaciones por tipo
-    notifications_by_type = {}
-    for choice in Notification.objects.filter(user=user).values_list('notification_type', flat=True).distinct():
-        count = Notification.objects.filter(user=user, notification_type=choice).count()
-        notifications_by_type[choice] = count
+    # Notificaciones por tipo (una consulta agregada)
+    notifications_by_type = {
+        item['notification_type']: item['total']
+        for item in Notification.objects.filter(user=user)
+        .values('notification_type')
+        .annotate(total=Count('id'))
+    }
     
     # Notificaciones recientes (últimas 5)
-    recent_notifications = Notification.objects.filter(user=user)[:5]
+    recent_notifications = Notification.objects.filter(user=user).order_by('-created_at')[:5]
     
     stats_data = {
         'total_notifications': total_notifications,

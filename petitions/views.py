@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 
-from .services import filter_petitions_for_provider
+from .services import filter_petitions_for_provider, get_petition_base_queryset
 import json
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -88,14 +88,15 @@ class PetitionAPIView(APIView):
         
         # Caso: cliente autenticado
         elif customer:
+            base_qs = get_petition_base_queryset().filter(id_customer=customer.id_customer)
             if pk:
                 petition = get_object_or_404(
-                    Petition.objects.filter(id_customer=customer.id_customer), pk=pk
+                    base_qs, pk=pk
                 )
                 serializer = PetitionSerializer(petition)
                 return Response(serializer.data, status=status.HTTP_200_OK)
             
-            petitions = Petition.objects.filter(id_customer=customer.id_customer)
+            petitions = base_qs
             serializer = PetitionSerializer(petitions, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         

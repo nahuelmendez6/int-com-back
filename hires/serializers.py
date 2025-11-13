@@ -1,10 +1,11 @@
 from rest_framework import serializers
-from postulations.models import Postulation, PostulationBudget
+from decimal import Decimal
+
+from postulations.models import Postulation, PostulationBudget, PostulationMaterial
 from postulations.serializers import PostulationBudgetSerializer
 from petitions.models import Petition
 from authentication.models import Customer, Provider
-from portfolio.serializers import MaterialSerializer, PostulationMaterialSerializer
-from postulations.models import PostulationMaterial
+from portfolio.serializers import PostulationMaterialSerializer
 
 # ====================================================
 # Serializer para la contratación (Hire)
@@ -40,16 +41,88 @@ class HireSerializer(serializers.ModelSerializer):
     # Métodos para campos personalizados
     # ====================================================
 
+    def _get_petition_instance(self, obj):
+        cache = getattr(self, "_petition_cache", None)
+        if cache is None:
+            cache = self._petition_cache = {}
+
+        petition_id = obj.id_petition
+        if petition_id in cache:
+            return cache[petition_id]
+
+        context_map = self.context.get("petition_map", {})
+        petition = context_map.get(petition_id)
+        if petition is None:
+            petition = (
+                Petition.objects.select_related("id_state", "id_type_petition")
+                .prefetch_related("categories")
+                .filter(pk=petition_id)
+                .first()
+            )
+        cache[petition_id] = petition
+        return petition
+
+    def _get_customer_instance(self, petition):
+        if petition is None or not petition.id_customer:
+            return None
+
+        cache = getattr(self, "_customer_cache", None)
+        if cache is None:
+            cache = self._customer_cache = {}
+
+        customer_id = petition.id_customer
+        if customer_id in cache:
+            return cache[customer_id]
+
+        context_map = self.context.get("customer_map", {})
+        customer = context_map.get(customer_id)
+        if customer is None:
+            customer = Customer.objects.select_related("user").filter(
+                pk=customer_id
+            ).first()
+        cache[customer_id] = customer
+        return customer
+
+    def _get_provider_instance(self, obj):
+        cache = getattr(self, "_provider_cache", None)
+        if cache is None:
+            cache = self._provider_cache = {}
+
+        provider_id = obj.id_provider
+        if provider_id in cache:
+            return cache[provider_id]
+
+        context_map = self.context.get("provider_map", {})
+        provider = context_map.get(provider_id)
+        if provider is None:
+            provider = Provider.objects.select_related("user", "profession").filter(
+                pk=provider_id
+            ).first()
+        cache[provider_id] = provider
+        return provider
+
+    def _get_budgets(self, obj):
+        if hasattr(obj, "_prefetched_objects_cache") and "budgets" in obj._prefetched_objects_cache:
+            return obj._prefetched_objects_cache["budgets"]
+        return PostulationBudget.objects.filter(id_postulation=obj.id_postulation)
+
+    def _get_materials(self, obj):
+        if hasattr(obj, "_prefetched_objects_cache") and "materials" in obj._prefetched_objects_cache:
+            return obj._prefetched_objects_cache["materials"]
+        return PostulationMaterial.objects.select_related("id_material").filter(
+            id_postulation=obj.id_postulation
+        )
+
     def get_petition(self, obj):
         """
         Obtiene la información resumida de la Petition asociada a la postulación.
         Retorna un dict con id y título de la Petition o None si no existe.
         """
-        petition = Petition.objects.filter(pk=obj.id_petition).first()
+        petition = self._get_petition_instance(obj)
         if petition:
             return {
                 'id': petition.id_petition,
-                'title': petition.description  # completo
+                'title': petition.description
             }
         return None
 
@@ -59,9 +132,9 @@ class HireSerializer(serializers.ModelSerializer):
         Obtiene información del Customer asociado a la Petition de la Postulation.
         Retorna un dict con id, nombre, apellido y URL de la imagen de perfil.
         """
-        petition = Petition.objects.filter(pk=obj.id_petition).first()
+        petition = self._get_petition_instance(obj)
         if petition and petition.id_customer:
-            customer = Customer.objects.filter(pk=petition.id_customer).first()
+            customer = self._get_customer_instance(petition)
             if customer and customer.user:
                 return {
                     'id': customer.id_customer,
@@ -77,7 +150,7 @@ class HireSerializer(serializers.ModelSerializer):
         Obtiene información del Provider asociado a la Postulation.
         Retorna un dict con id, nombre, apellido, profesión y URL de imagen de perfil.
         """
-        provider = Provider.objects.filter(pk=obj.id_provider).first()
+        provider = self._get_provider_instance(obj)
         if provider and provider.user:
             return {
                 'id': provider.id_provider,
@@ -95,10 +168,8 @@ class HireSerializer(serializers.ModelSerializer):
         Retorna el monto total o None si no existe presupuesto.
         Si hay múltiples presupuestos, suma todos los amounts.
         """
-        budgets = PostulationBudget.objects.filter(id_postulation=obj.id_postulation)
+        budgets = self._get_budgets(obj)
         if budgets.exists():
-            # Sumar todos los amounts que no sean None
-            from decimal import Decimal
             total = sum(
                 Decimal(str(b.amount)) 
                 for b in budgets 
@@ -113,19 +184,15 @@ class HireSerializer(serializers.ModelSerializer):
         Obtiene información completa del presupuesto de la postulación.
         Retorna una lista con todos los presupuestos asociados a la postulación.
         """
-        budgets = PostulationBudget.objects.filter(id_postulation=obj.id_postulation)
-        if budgets.exists():
-            return PostulationBudgetSerializer(budgets, many=True).data
-        return []
+        budgets = self._get_budgets(obj)
+        return PostulationBudgetSerializer(budgets, many=True).data
     
     def get_materials(self, obj):
         """
         Retorna los materiales asociados a la postulacion, si existen.
         """
-        materials = PostulationMaterial.objects.filter(id_postulation=obj.id_postulation)
-        if materials.exists():
-            return PostulationMaterialSerializer(materials, many=True).data
-        return []
+        materials = self._get_materials(obj)
+        return PostulationMaterialSerializer(materials, many=True).data
 
 
     # ====================================================

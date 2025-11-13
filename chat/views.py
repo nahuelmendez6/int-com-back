@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
-from django.db.models import Q
+from django.db.models import Q, Count, Prefetch
 from django.contrib.auth import get_user_model
 from .models import Conversation, Message
 from .serializers import (
@@ -39,7 +39,28 @@ class ConversationViewSet(viewsets.ViewSet):
         Returns:
             Response: Lista serializada de conversaciones del usuario.
         """
-        conversations = Conversation.objects.filter(participants=request.user).distinct()
+        conversations = (
+            Conversation.objects.filter(participants=request.user)
+            .prefetch_related(
+                Prefetch(
+                    "participants",
+                    queryset=User.objects.only("id_user", "email", "name", "lastname"),
+                ),
+                Prefetch(
+                    "messages",
+                    queryset=Message.objects.select_related("sender")
+                    .order_by("-created_at")[:1],
+                    to_attr="prefetched_last_message",
+                ),
+            )
+            .annotate(
+                unread_total=Count(
+                    "messages",
+                    filter=Q(messages__read=False) & ~Q(messages__sender=request.user),
+                )
+            )
+            .distinct()
+        )
         serializer = ConversationSerializer(conversations, many=True, context={'request': request})
         return Response(serializer.data)
     

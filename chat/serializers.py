@@ -61,7 +61,11 @@ class ConversationSerializer(serializers.ModelSerializer):
         Returns:
             dict | None: Datos serializados del último mensaje, o None si no existen mensajes.
         """
-        last_msg = obj.messages.last()
+        if hasattr(obj, "prefetched_last_message"):
+            messages = obj.prefetched_last_message
+            last_msg = messages[0] if messages else None
+        else:
+            last_msg = obj.messages.order_by('-created_at').first()
         return MessageSerializer(last_msg).data if last_msg else None
 
     def get_unread_count(self, obj):
@@ -77,6 +81,8 @@ class ConversationSerializer(serializers.ModelSerializer):
         """
         request = self.context.get('request')
         if request and request.user.is_authenticated:
+            if hasattr(obj, "unread_total"):
+                return obj.unread_total
             return obj.messages.filter(read=False).exclude(sender=request.user).count()
         return 0
     
