@@ -3,12 +3,35 @@ from .models import Petition, PetitionCategory, PetitionAttachment, PetitionMate
 from authentication.models import Customer, Provider
 
 # ====================================================
-# FUNCIÓN: filter_petitions_for_provider
+# FUNCIÓN: get_petition_list_queryset
 # ====================================================
-def get_petition_base_queryset():
+def get_petition_list_queryset():
     """
-    Retorna el queryset base de Petitions con relaciones precargadas para
-    evitar consultas N+1 durante la serialización.
+    Retorna el queryset para listas de Petitions, optimizado para rendimiento.
+    Precarga solo las relaciones necesarias para la vista de lista.
+    """
+    return (
+        Petition.objects.select_related(
+            "id_type_petition",
+            "id_state",
+            "id_profession",
+            "id_type_provider",
+        )
+        .prefetch_related(
+            Prefetch(
+                "petitioncategory_set",
+                queryset=PetitionCategory.objects.select_related("id_category"),
+            ),
+        )
+    )
+
+# ====================================================
+# FUNCIÓN: get_petition_detail_queryset
+# ====================================================
+def get_petition_detail_queryset():
+    """
+    Retorna el queryset para la vista de detalle de una Petition.
+    Precarga todas las relaciones anidadas para una serialización completa.
     """
     return (
         Petition.objects.select_related(
@@ -38,6 +61,9 @@ def get_petition_base_queryset():
     )
 
 
+# ====================================================
+# FUNCIÓN: filter_petitions_for_provider
+# ====================================================
 def filter_petitions_for_provider(provider):
     """
     Filtra las peticiones disponibles para un proveedor según su perfil.
@@ -50,7 +76,7 @@ def filter_petitions_for_provider(provider):
     5. Coincidencia geográfica: ciudades del proveedor y clientes
     """
 
-    qs = get_petition_base_queryset()
+    qs = get_petition_list_queryset()
     # ------------------------------------------------
     # Filtrar por profesión del proveedor
     # Si la petición especifica una profesión, debe coincidir con la del proveedor.
@@ -70,9 +96,8 @@ def filter_petitions_for_provider(provider):
     # Filtrar por categorías del proveedor
     # Si el proveedor tiene categorías asignadas, la petición debe tener al menos una coincidencia
     # ------------------------------------------------
-    #if provider.categories.exists():
-    #    qs = qs.filter(categories__in=provider.categories.all())
-    #    print("Tras categorías:", qs.count())
+    if provider.categories.exists():
+        qs = qs.filter(categories__in=provider.categories.all())
 
     # ------------------------------------------------
     # Filtrar por zonas geográficas (ciudades del proveedor)

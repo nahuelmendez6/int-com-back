@@ -1,5 +1,5 @@
-from rest_framework import serializers
 from decimal import Decimal
+from rest_framework import serializers
 
 from postulations.models import Postulation, PostulationBudget, PostulationMaterial
 from postulations.serializers import PostulationBudgetSerializer
@@ -7,18 +7,21 @@ from petitions.models import Petition
 from authentication.models import Customer, Provider
 from portfolio.serializers import PostulationMaterialSerializer
 
+
 # ====================================================
 # Serializer para la contratación (Hire)
 # ====================================================
+
 class HireSerializer(serializers.ModelSerializer):
     """
     Serializer para representar una postulación aprobada (contratación),
     incluyendo información de la petición, cliente, proveedor y precio final.
     """
+
     petition = serializers.SerializerMethodField()
     customer = serializers.SerializerMethodField()
     provider = serializers.SerializerMethodField()
-    approved_at = serializers.DateTimeField(source='date_update', read_only=True)
+    approved_at = serializers.DateTimeField(source="date_update", read_only=True)
     final_price = serializers.SerializerMethodField()
     budget = serializers.SerializerMethodField()
     materials = serializers.SerializerMethodField()
@@ -26,15 +29,15 @@ class HireSerializer(serializers.ModelSerializer):
     class Meta:
         model = Postulation
         fields = [
-            'id_postulation',
-            'proposal',
-            'petition',
-            'customer',
-            'provider',
-            'approved_at',
-            'final_price',
-            'budget',
-            'materials',
+            "id_postulation",
+            "proposal",
+            "petition",
+            "customer",
+            "provider",
+            "approved_at",
+            "final_price",
+            "budget",
+            "materials",
         ]
 
     # ====================================================
@@ -59,6 +62,7 @@ class HireSerializer(serializers.ModelSerializer):
                 .filter(pk=petition_id)
                 .first()
             )
+
         cache[petition_id] = petition
         return petition
 
@@ -77,9 +81,12 @@ class HireSerializer(serializers.ModelSerializer):
         context_map = self.context.get("customer_map", {})
         customer = context_map.get(customer_id)
         if customer is None:
-            customer = Customer.objects.select_related("user").filter(
-                pk=customer_id
-            ).first()
+            customer = (
+                Customer.objects.select_related("user")
+                .filter(pk=customer_id)
+                .first()
+            )
+
         cache[customer_id] = customer
         return customer
 
@@ -95,9 +102,12 @@ class HireSerializer(serializers.ModelSerializer):
         context_map = self.context.get("provider_map", {})
         provider = context_map.get(provider_id)
         if provider is None:
-            provider = Provider.objects.select_related("user", "profession").filter(
-                pk=provider_id
-            ).first()
+            provider = (
+                Provider.objects.select_related("user", "profession")
+                .filter(pk=provider_id)
+                .first()
+            )
+
         cache[provider_id] = provider
         return provider
 
@@ -121,12 +131,11 @@ class HireSerializer(serializers.ModelSerializer):
         petition = self._get_petition_instance(obj)
         if petition:
             return {
-                'id': petition.id_petition,
-                'title': petition.description
+                "id": petition.id_petition,
+                "title": petition.description,
             }
         return None
 
-    # Customer (desde la Petition)
     def get_customer(self, obj):
         """
         Obtiene información del Customer asociado a la Petition de la Postulation.
@@ -137,14 +146,13 @@ class HireSerializer(serializers.ModelSerializer):
             customer = self._get_customer_instance(petition)
             if customer and customer.user:
                 return {
-                    'id': customer.id_customer,
-                    'name': customer.user.name,
-                    'lastname': customer.user.lastname,
-                    'profile_image': self._get_profile_image_url(customer.user)
+                    "id": customer.id_customer,
+                    "name": customer.user.name,
+                    "lastname": customer.user.lastname,
+                    "profile_image": self._get_profile_image_url(customer.user),
                 }
         return None
 
-    # Provider
     def get_provider(self, obj):
         """
         Obtiene información del Provider asociado a la Postulation.
@@ -153,15 +161,14 @@ class HireSerializer(serializers.ModelSerializer):
         provider = self._get_provider_instance(obj)
         if provider and provider.user:
             return {
-                'id': provider.id_provider,
-                'name': provider.user.name,
-                'lastname': provider.user.lastname,
-                'profession': provider.profession.name if provider.profession else None,
-                'profile_image': self._get_profile_image_url(provider.user)
+                "id": provider.id_provider,
+                "name": provider.user.name,
+                "lastname": provider.user.lastname,
+                "profession": provider.profession.name if provider.profession else None,
+                "profile_image": self._get_profile_image_url(provider.user),
             }
         return None
 
-    # Final Price
     def get_final_price(self, obj):
         """
         Obtiene el precio final de la postulación desde PostulationBudget.
@@ -171,14 +178,13 @@ class HireSerializer(serializers.ModelSerializer):
         budgets = self._get_budgets(obj)
         if budgets.exists():
             total = sum(
-                Decimal(str(b.amount)) 
-                for b in budgets 
+                Decimal(str(b.amount))
+                for b in budgets
                 if b.amount is not None
             )
             return float(total) if total > 0 else None
         return None
 
-    # Budget
     def get_budget(self, obj):
         """
         Obtiene información completa del presupuesto de la postulación.
@@ -186,7 +192,7 @@ class HireSerializer(serializers.ModelSerializer):
         """
         budgets = self._get_budgets(obj)
         return PostulationBudgetSerializer(budgets, many=True).data
-    
+
     def get_materials(self, obj):
         """
         Retorna los materiales asociados a la postulacion, si existen.
@@ -194,23 +200,21 @@ class HireSerializer(serializers.ModelSerializer):
         materials = self._get_materials(obj)
         return PostulationMaterialSerializer(materials, many=True).data
 
-
     # ====================================================
     # Método auxiliar privado
     # ====================================================
+
     def _get_profile_image_url(self, user):
         """
-        Devuelve una URL segura para el campo profile_image sin intentar leer el binario
-        soporta ImageField
+        Devuelve una URL segura para el campo profile_image sin intentar leer el binario.
+        Soporta ImageField.
         """
         if not user.profile_image:
             return None
-        
-        # si es ImageField 
-        if hasattr(user.profile_image, 'url'):
+
+        # Si es ImageField
+        if hasattr(user.profile_image, "url"):
             return user.profile_image.url
-        
-        # si es un texto
+
+        # Si es un texto
         return str(user.profile_image)
-
-

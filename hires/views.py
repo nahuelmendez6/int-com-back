@@ -2,14 +2,17 @@ from django.db.models import Prefetch
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+
 from postulations.models import Postulation, PostulationBudget, PostulationMaterial
 from petitions.models import Petition
 from .serializers import HireSerializer
 from authentication.models import Provider, Customer
 
+
 # ====================================================
 # API para listar postulations aprobadas (contrataciones)
 # ====================================================
+
 class HireAPIView(generics.ListAPIView):
     """
     API view para recuperar una lista de postulations aprobadas (hires).
@@ -17,6 +20,7 @@ class HireAPIView(generics.ListAPIView):
     - Si el usuario es un Customer, retorna las hires de sus petitions.
     - Si el usuario es un Provider, retorna sus postulations aprobadas.
     """
+
     serializer_class = HireSerializer
     permission_classes = [IsAuthenticated]
 
@@ -42,10 +46,12 @@ class HireAPIView(generics.ListAPIView):
             petition_ids = Petition.objects.filter(
                 id_customer=customer.id_customer
             ).values_list("id_petition", flat=True)
+
             queryset = Postulation.objects.filter(
                 id_petition__in=petition_ids,
                 id_state=approved_state_id,
             )
+
         elif provider:
             queryset = Postulation.objects.filter(
                 id_provider=provider.id_provider,
@@ -80,15 +86,14 @@ class HireAPIView(generics.ListAPIView):
             petition.id_customer for petition in petitions if petition.id_customer
         }
 
-        customers = Customer.objects.filter(id_customer__in=customer_ids).select_related(
-            "user"
-        )
+        customers = Customer.objects.filter(
+            id_customer__in=customer_ids
+        ).select_related("user")
         customer_map = {customer.id_customer: customer for customer in customers}
 
-        providers = Provider.objects.filter(id_provider__in=provider_ids).select_related(
-            "user",
-            "profession",
-        )
+        providers = Provider.objects.filter(
+            id_provider__in=provider_ids
+        ).select_related("user", "profession")
         provider_map = {provider.id_provider: provider for provider in providers}
 
         context = self.get_serializer_context()

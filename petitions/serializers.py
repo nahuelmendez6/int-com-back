@@ -38,6 +38,22 @@ class PetitionStateSerializer(serializers.ModelSerializer):
 
 
 # ====================================================
+# SERIALIZER: CategoryDetailSerializer (a través de PetitionCategory)
+# ====================================================
+class CategoryDetailSerializer(serializers.ModelSerializer):
+    """
+    Serializer para mostrar los detalles de la categoría a través de la
+    relación intermedia PetitionCategory.
+    """
+    id_category = serializers.IntegerField(source='id_category.id_category')
+    name = serializers.CharField(source='id_category.name')
+
+    class Meta:
+        model = PetitionCategory
+        fields = ('id_category', 'name')
+
+
+# ====================================================
 # SERIALIZER: PetitionCategorySerializer
 # ====================================================
 class PetitionCategorySerializer(serializers.ModelSerializer):
@@ -86,39 +102,67 @@ class PetitionStateHistorySerializer(serializers.ModelSerializer):
         model = PetitionStateHistory
         fields = '__all__'
 
+
 # ====================================================
-# SERIALIZER PRINCIPAL: PetitionSerializer
+# SERIALIZER: PetitionListSerializer (para vistas de lista)
+# ====================================================
+class PetitionListSerializer(serializers.ModelSerializer):
+    """
+    Serializer ligero para las vistas de lista de peticiones.
+    Excluye relaciones anidadas pesadas para mejorar el rendimiento.
+    """
+    type_petition = serializers.CharField(source='id_type_petition.type_petition', read_only=True)
+    state = serializers.CharField(source='id_state.name', read_only=True)
+    categories = CategoryDetailSerializer(many=True, source='petitioncategory_set', read_only=True)
+
+    class Meta:
+        model = Petition
+        fields = (
+            'id_petition',
+            'description',
+            'date_since',
+            'date_until',
+            'type_petition',
+            'state',
+            'categories',
+            'id_customer'
+        )
+
+
+# ====================================================
+# SERIALIZER PRINCIPAL: PetitionSerializer (para vista de detalle)
 # ====================================================
 class PetitionSerializer(serializers.ModelSerializer):
     """
-    Serializer principal para el modelo Petition.
-    Incluye relaciones anidadas a:
-    - categories: Categorías asociadas a la petición
-    - attachments: Archivos adjuntos
-    - materials: Materiales solicitados
-    - state_history: Historial de cambios de estado
-
-    También incluye relaciones directas con TypePetition y PetitionState.
+    Serializer principal para el modelo Petition (vista de detalle).
+    Incluye todas las relaciones anidadas para una vista completa.
     """
 
-    # Relaciones anidadas
-    categories = PetitionCategorySerializer(many=True, source='petitioncategory_set', read_only=True)
+    # Relaciones anidadas (lectura)
+    categories = CategoryDetailSerializer(many=True, source='petitioncategory_set', read_only=True)
     attachments = PetitionAttachmentSerializer(many=True, source="petitionattachment_set", read_only=True)
     materials = PetitionMaterialSerializer(many=True, source="petitionmaterial_set", read_only=True)
     state_history = PetitionStateHistorySerializer(many=True, source="petitionstatehistory_set", read_only=True)
+    id_type_petition = TypePetitionSerializer(read_only=True)
+    id_state = PetitionStateSerializer(read_only=True, allow_null=True)
 
-
-    # Relaciones directas
-    id_type_petition = serializers.PrimaryKeyRelatedField(
-        queryset=TypePetition.objects.all()
+    # Campos para escritura (usados en POST/PATCH)
+    type_petition_pk = serializers.PrimaryKeyRelatedField(
+        queryset=TypePetition.objects.all(), write_only=True, source='id_type_petition'
     )
-    id_state = serializers.PrimaryKeyRelatedField(
-        queryset=PetitionState.objects.all()
+    state_pk = serializers.PrimaryKeyRelatedField(
+        queryset=PetitionState.objects.all(), write_only=True, source='id_state', allow_null=True, required=False
     )
 
     class Meta:
         model = Petition
-        fields = '__all__'
+        fields = (
+            'id_petition', 'id_customer', 'description', 'id_profession',
+            'id_type_provider', 'date_since', 'date_until', 'id_user_create',
+            'id_user_update', 'date_create', 'date_update', 'categories',
+            'attachments', 'materials', 'state_history', 'id_type_petition',
+            'id_state', 'type_petition_pk', 'state_pk'
+        )
 
     def validate(self, data):
         

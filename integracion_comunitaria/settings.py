@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     
     # Librerías externas
     'corsheaders',
+    'debug_toolbar',
 
     'rest_framework',
     'rest_framework_simplejwt',
@@ -110,7 +111,13 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
+
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
+
 
 
 # -----------------------------------------------------------
@@ -148,6 +155,29 @@ TEMPLATES = [
 WSGI_APPLICATION = 'integracion_comunitaria.wsgi.application'
 
 
+
+# -----------------------------------------------------------
+# CONFIGURACIÓN DE LOGGING
+# -----------------------------------------------------------
+"""
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django.db.backends': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+}
+"""
 
 # -----------------------------------------------------------
 # BASE DE DATOS
@@ -268,3 +298,23 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 MEDIA_URL = '/media/'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+"""
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+    'console': {
+    'level': 'DEBUG',
+    'class': 'logging.StreamHandler',
+    },
+    },
+   'loggers': {
+   'django.db.backends': {
+   'handlers': ['console'],
+   'level': 'DEBUG',
+   },
+   },
+}
+"""

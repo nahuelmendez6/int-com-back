@@ -82,32 +82,18 @@ class LoginSerializer(serializers.Serializer):
 
     """
     Serializer encargado de manejar la autenticación de usuarios.
-    Verifica credenciales, genera tokens JWT y retorna información del usuario autenticado.
+    Optimizado para cargar relaciones de perfil eficientemente.
     """
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
 
     def validate(self, data):
 
-        """
-        Valida las credenciales del usuario y genera los tokens de acceso.
-
-        Raises:
-            serializers.ValidationError: Si las credenciales son inválidas o el usuario está deshabilitado.
-
-        Returns:
-            dict: Datos del usuario autenticado, incluyendo tokens y rol.
-        """
-
         email = data.get('email')
         password = data.get('password')
 
-        print("🔍 Intentando autenticación con:")
-        print(f"Email: {email}")
-        print(f"Password: {password}")
-
+        # 1. Autenticación estándar
         user = authenticate(email=email, password=password)
-        print("Resultado de authenticate:", user)
 
         if not user:
             raise serializers.ValidationError('Credenciales inválidas.')
@@ -115,12 +101,25 @@ class LoginSerializer(serializers.Serializer):
         if not user.is_active:
             raise serializers.ValidationError('Usuario deshabilitado.')
 
+        # 2. 💡 OPTIMIZACIÓN DE RENDIMIENTO:
+        # Volver a cargar el usuario usando select_related() para obtener 
+        # las relaciones 'customer' y 'provider' en una sola consulta.
+        try:
+            # Usar 'pk' o 'id_user' (según la definición de tu modelo User)
+            user = User.objects.select_related('customer', 'provider').get(pk=user.pk)
+        except User.DoesNotExist:
+            # En un flujo normal, esto no debería ocurrir, pero es una buena práctica.
+            raise serializers.ValidationError('Error interno al cargar datos del perfil.')
+
+
+        # 3. Generación de Tokens (operación estándar)
         refresh = RefreshToken.for_user(user)
 
+        # 4. Determinación de Rol (ahora eficiente, sin consultas extra)
         role = None
-        if hasattr(user, 'customer'):
+        if hasattr(user, 'customer'): # El acceso es directo al objeto ya cargado
             role = 'customer'
-        elif hasattr(user, 'provider'):
+        elif hasattr(user, 'provider'): # El acceso es directo al objeto ya cargado
             role = 'provider'
         else:
             role = 'admin' if user.is_staff else 'user'

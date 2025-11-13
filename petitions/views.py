@@ -2,44 +2,28 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
-
-from .services import filter_petitions_for_provider, get_petition_base_queryset
-import json
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 
-from django.shortcuts import get_object_or_404
-from .models import Petition, PetitionCategory, PetitionAttachment, PetitionMaterial
-from .serializers import PetitionSerializer
-
+from .services import filter_petitions_for_provider, get_petition_detail_queryset, get_petition_list_queryset
+from .models import (
+    Petition,
+    PetitionAttachment,
+    PetitionCategory,
+    PetitionMaterial,
+    TypePetition
+)
+from .serializers import (
+    PetitionSerializer,
+    PetitionListSerializer,
+    TypePetitionSerializer
+)
 from authentication.models import Provider
 
-
-from .services import filter_petitions_for_provider
-
-from .models import (Petition,
-                      PetitionAttachment,
-                      PetitionCategory,
-                      PetitionMaterial,
-                      PetitionState,
-                      PetitionStateHistory,
-                      TypePetition)
-
-from .serializers import (PetitionSerializer,
-                          PetitionStateHistorySerializer,
-                          TypePetitionSerializer,
-                          PetitionStateSerializer,
-                          PetitionCategorySerializer,
-                          PetitionMaterialSerializer,
-                          PetitionAttachmentSerializer)
 
 # ====================================================
 # APIView: TypePetitionAPIView
 # ====================================================
 class TypePetitionAPIView(APIView):
-
     """
     APIView para listar todos los tipos de peticiones.
     GET: devuelve todos los registros de TypePetition.
@@ -51,7 +35,6 @@ class TypePetitionAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-
 # ====================================================
 # APIView: PetitionAPIView
 # ====================================================
@@ -60,51 +43,53 @@ class PetitionAPIView(APIView):
     APIView para CRUD de Peticiones con soporte de relaciones anidadas:
     - Crear/actualizar categorías, adjuntos y materiales
     - Filtrado según perfil del usuario (Proveedor o Cliente)
+    - Serializadores dinámicos para vistas de lista y detalle
     """
+    permission_classes = [IsAuthenticated]
 
+    def get_serializer_class(self):
+        """Devuelve el serializer apropiado para la acción (lista o detalle)."""
+        if self.kwargs.get('pk'):
+            return PetitionSerializer
+        return PetitionListSerializer
 
     def get(self, request, pk=None):
         """
         GET:
-        - Si es proveedor, devuelve peticiones filtradas según su perfil
-        - Si es cliente, devuelve solo sus peticiones
-        - pk opcional: si se pasa, devuelve un solo objeto
+        - Si es proveedor, devuelve peticiones filtradas según su perfil.
+        - Si es cliente, devuelve solo sus peticiones.
+        - pk opcional: si se pasa, devuelve un solo objeto (vista de detalle).
         """
+        serializer_class = self.get_serializer_class()
         provider = getattr(request.user, 'provider', None)
         customer = getattr(request.user, 'customer', None)
 
-        # Caso: proveedor autenticado
-        if provider:
-            if pk:
-                petition = get_object_or_404(
-                    filter_petitions_for_provider(provider), pk=pk
-                )
-                serializer = PetitionSerializer(petition)
-                return Response(serializer.data, status=status.HTTP_200_OK)
+        # Caso: vista de detalle (pk proporcionado)
+        if pk:
+            qs = get_petition_detail_queryset()
+            if provider:
+                # Un proveedor solo puede ver detalles de peticiones que le corresponden
+                petition = get_object_or_404(filter_petitions_for_provider(provider).distinct(), pk=pk)
+            elif customer:
+                # Un cliente solo puede ver detalles de sus propias peticiones
+                petition = get_object_or_404(qs.filter(id_customer=customer.id_customer), pk=pk)
+            else:
+                return Response({'detail': 'El usuario no tiene un perfil válido.'}, status=status.HTTP_403_FORBIDDEN)
             
-            petitions = filter_petitions_for_provider(provider)
-            serializer = PetitionSerializer(petitions, many=True)
+            serializer = serializer_class(petition)
             return Response(serializer.data, status=status.HTTP_200_OK)
-        
-        # Caso: cliente autenticado
-        elif customer:
-            base_qs = get_petition_base_queryset().filter(id_customer=customer.id_customer)
-            if pk:
-                petition = get_object_or_404(
-                    base_qs, pk=pk
-                )
-                serializer = PetitionSerializer(petition)
-                return Response(serializer.data, status=status.HTTP_200_OK)
+
+        # Caso: vista de lista (sin pk)
+        else:
+            if provider:
+                petitions = filter_petitions_for_provider(provider)
+            elif customer:
+                petitions = get_petition_list_queryset().filter(id_customer=customer.id_customer)
+            else:
+                return Response({'detail': 'El usuario no tiene un perfil válido.'}, status=status.HTTP_403_FORBIDDEN)
             
-            petitions = base_qs
-            serializer = PetitionSerializer(petitions, many=True)
+            serializer = serializer_class(petitions, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
-        
-        # Caso: no es proveedor ni cliente
-        return Response(
-            {'detail':'El usuario no tiene un perfil válido.'},
-            status=status.HTTP_403_FORBIDDEN
-        )
         
     def post(self, request):
         """
@@ -228,25 +213,12 @@ class ProviderPetitionsFeedAPIView(APIView):
         """
         GET: Devuelve todas las peticiones que coinciden con el perfil del proveedor
         """
-        user = request.user
-
-
-        
         try:
-            provider = Provider.objects.filter(user=request.user).first()
-
+            provider = Provider.objects.get(user=request.user)
         except Provider.DoesNotExist:
-            return Response({'detail':'El usuario no es un proveedor'}, status=status.HTTP_403_FORBIDDEN)
-
-
-
-        print("Proveedor:", provider)
-        print("ID proveedor:", provider.id_provider)
-        print("Categorías del proveedor:", list(provider.categories.values_list('name', flat=True)))
-        print("Tipo de proveedor:", getattr(provider.type_provider, 'name', None))
+            return Response({'detail': 'El usuario no es un proveedor'}, status=status.HTTP_403_FORBIDDEN)
 
         petitions = filter_petitions_for_provider(provider)
-        print(petitions)
-        serializer = PetitionSerializer(petitions, many=True)
+        serializer = PetitionListSerializer(petitions, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
