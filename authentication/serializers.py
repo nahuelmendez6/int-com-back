@@ -101,9 +101,6 @@ class LoginSerializer(serializers.Serializer):
         if not user.is_active:
             raise serializers.ValidationError('Usuario deshabilitado.')
 
-        # 2. 💡 OPTIMIZACIÓN DE RENDIMIENTO:
-        # Volver a cargar el usuario usando select_related() para obtener 
-        # las relaciones 'customer' y 'provider' en una sola consulta.
         try:
             # Usar 'pk' o 'id_user' (según la definición de tu modelo User)
             user = User.objects.select_related('customer', 'provider').get(pk=user.pk)
