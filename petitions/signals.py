@@ -1,6 +1,7 @@
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from notifications.services import notification_service
+from django.db.models import Q
 from .models import Petition
 from authentication.models import Customer, Provider
 
@@ -19,10 +20,37 @@ def notify_on_petition_created(sender, instance, created, **kwargs):
     """
     if created:
         print(f"✅ SIGNAL: 'notify_on_petition_created' disparado para la petición: '{instance.description}'")
-        # Obtener todos los proveedores que podrían estar interesados
-        # Por ahora, notificamos a todos los proveedores activos
-        providers = Provider.objects.filter(user__is_active=True)
         
+        # Obtener el cliente para filtrar por su ciudad
+        try:
+            customer = Customer.objects.get(id_customer=instance.id_customer)
+            customer_city = customer.address.city if customer.address else None
+        except Customer.DoesNotExist:
+            customer_city = None
+
+        # Construir el queryset de proveedores a notificar
+        providers_query = Provider.objects.filter(user__is_active=True)
+
+        # 1. Filtrar por profesión (si la petición la especifica)
+        if instance.id_profession:
+            providers_query = providers_query.filter(profession=instance.id_profession)
+
+        # 2. Filtrar por tipo de proveedor (si la petición lo especifica)
+        if instance.id_type_provider:
+            providers_query = providers_query.filter(type_provider=instance.id_type_provider)
+
+        # 3. Filtrar por categorías de la petición
+        petition_categories = instance.categories.all()
+        if petition_categories.exists():
+            providers_query = providers_query.filter(categories__in=petition_categories)
+
+        # 4. Filtrar por zona geográfica (ciudad del cliente)
+        if customer_city:
+            providers_query = providers_query.filter(cities=customer_city)
+        
+        # Obtener los proveedores finales y eliminar duplicados
+        providers = providers_query.distinct()
+
         print(f"ℹ️ SIGNAL: Se notificarán a {len(providers)} proveedores.")
         for provider in providers:
             notification_service.send_notification(
