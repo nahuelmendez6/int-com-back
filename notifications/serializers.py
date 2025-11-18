@@ -72,7 +72,7 @@ class NotificationSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = NotificationSettings
         fields = [
-            'postulation_created', 'postulation_state_changed', 
+            'petition_created', 'postulation_created', 'postulation_state_changed', 
             'postulation_accepted', 'postulation_rejected', 
             'petition_closed', 'email_notifications', 'push_notifications'
         ]

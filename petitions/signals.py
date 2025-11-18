@@ -18,20 +18,22 @@ def notify_on_petition_created(sender, instance, created, **kwargs):
     Solo se ejecuta si la petición es recién creada (created=True).
     """
     if created:
+        print(f"✅ SIGNAL: 'notify_on_petition_created' disparado para la petición: '{instance.description}'")
         # Obtener todos los proveedores que podrían estar interesados
         # Por ahora, notificamos a todos los proveedores activos
-        providers = Provider.objects.filter(is_active=True)
+        providers = Provider.objects.filter(user__is_active=True)
         
+        print(f"ℹ️ SIGNAL: Se notificarán a {len(providers)} proveedores.")
         for provider in providers:
             notification_service.send_notification(
                 user_id=provider.user.id_user,
                 title="Nueva petición disponible",
-                message=f"Se ha publicado una nueva petición: '{instance.title}'",
-                notification_type='general',
+                message=f"Se ha publicado una nueva petición: '{instance.description}'",
+                notification_type='petition_created',
                 related_petition_id=instance.id_petition,
                 metadata={
                     'petition_id': instance.id_petition,
-                    'petition_title': instance.title,
+                    'petition_description': instance.description,
                     'petition_type': 'new_petition'
                 }
             )

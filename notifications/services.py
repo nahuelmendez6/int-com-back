@@ -38,7 +38,10 @@ class NotificationService:
             settings, created = NotificationSettings.objects.get_or_create(user=user)
             
             # Verificar si el usuario tiene habilitado este tipo de notificación
-            if not self._is_notification_enabled(settings, notification_type):
+            is_enabled = self._is_notification_enabled(settings, notification_type)
+            print(f"⚙️ SERVICE: Verificando para user '{user.username}', tipo '{notification_type}'. Habilitado: {is_enabled}")
+
+            if not is_enabled:
                 return None
             
             # Crear la notificación
@@ -52,8 +55,10 @@ class NotificationService:
                 metadata=metadata or {}
             )
             
+            print(f"✅ SERVICE: Notificación '{notification.id}' creada en la DB para el usuario '{user.username}'.")
             # Enviar por WebSocket si está habilitado
             if settings.push_notifications:
+                print(f"🚀 SERVICE: Enviando notificación por WebSocket (push_notifications: {settings.push_notifications})")
                 self._send_websocket_notification(user_id, notification)
             
             return notification
@@ -90,6 +95,7 @@ class NotificationService:
         según sus preferencias en NotificationSettings.
         """
         type_mapping = {
+            'petition_created': settings.petition_created,
             'postulation_created': settings.postulation_created,
             'postulation_state_changed': settings.postulation_state_changed,
             'postulation_accepted': settings.postulation_accepted,

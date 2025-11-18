@@ -88,6 +88,7 @@ class NotificationSettings(models.Model):
     postulation_state_changed = models.BooleanField(default=True)
     postulation_accepted = models.BooleanField(default=True)
     postulation_rejected = models.BooleanField(default=True)
+    petition_created = models.BooleanField(default=True)
     petition_closed = models.BooleanField(default=True)
     
     # Configuraciones generales

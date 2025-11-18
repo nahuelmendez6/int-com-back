@@ -87,6 +87,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         """
         Envía al cliente una notificación recién creada.
         """
+        print(f"📡 CONSUMER: Recibido evento 'notification_created' para el grupo '{self.user_group_name}'. Enviando al cliente.")
         await self.send(text_data=json.dumps({
             'type': 'notification_created',
             'notification': event['notification'],

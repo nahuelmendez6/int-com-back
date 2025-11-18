@@ -24,10 +24,12 @@ class Grade(models.Model):
 class GradeCustomer(models.Model):
     id_grade_customer = models.AutoField(primary_key=True)
     customer = models.ForeignKey(
-        User, on_delete=models.CASCADE, db_column='id_customer'
+        User, on_delete=models.CASCADE, db_column='id_customer',
+        related_name='grade_customer_receiver'
     )
     provider = models.ForeignKey(
-        User, on_delete=models.CASCADE, db_column='id_provider'
+        User, on_delete=models.CASCADE, db_column='id_provider',
+        related_name='grade_provider_sender'
     )
     
     rating = models.PositiveSmallIntegerField(blank=True, null=True)
@@ -58,8 +60,8 @@ class GradeCustomer(models.Model):
 # ====================================================
 class GradeProvider(models.Model):
     id_grade_provider = models.AutoField(primary_key=True)
-    provider = models.ForeignKey(User, on_delete=models.CASCADE, db_column='id_provider')
-    customer = models.ForeignKey(User, on_delete=models.CASCADE, db_column='id_customer')  # cliente que califica
+    provider = models.ForeignKey(User, on_delete=models.CASCADE, db_column='id_provider', related_name='grade_provider')
+    customer = models.ForeignKey(User, on_delete=models.CASCADE, db_column='id_customer', related_name='grade_customer')  # cliente que califica
     grade = models.ForeignKey(Grade, on_delete=models.CASCADE, db_column='id_grade')
     rating = models.PositiveSmallIntegerField(blank=True, null=True)
     coment = models.CharField(max_length=255, blank=True, null=True)
