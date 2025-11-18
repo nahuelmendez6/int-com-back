@@ -147,8 +147,8 @@ class PetitionSerializer(serializers.ModelSerializer):
     id_state = PetitionStateSerializer(read_only=True, allow_null=True)
 
     # Campos para escritura (usados en POST/PATCH)
-    type_petition_pk = serializers.PrimaryKeyRelatedField(
-        queryset=TypePetition.objects.all(), write_only=True, source='id_type_petition'
+    id_type_petition = serializers.PrimaryKeyRelatedField(
+        queryset=TypePetition.objects.all(), write_only=True
     )
     state_pk = serializers.PrimaryKeyRelatedField(
         queryset=PetitionState.objects.all(), write_only=True, source='id_state', allow_null=True, required=False
@@ -161,7 +161,7 @@ class PetitionSerializer(serializers.ModelSerializer):
             'id_type_provider', 'date_since', 'date_until', 'id_user_create',
             'id_user_update', 'date_create', 'date_update', 'categories',
             'attachments', 'materials', 'state_history', 'id_type_petition',
-            'id_state', 'type_petition_pk', 'state_pk'
+            'id_state', 'id_type_petition', 'state_pk'
         )
 
     def validate(self, data):

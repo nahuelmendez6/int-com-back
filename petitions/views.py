@@ -101,7 +101,10 @@ class PetitionAPIView(APIView):
         serializer = PetitionSerializer(data=request.data)
 
         if serializer.is_valid():
-            petition = serializer.save(id_customer=request.user.customer.id_customer)
+            petition = serializer.save(
+                id_customer=request.user.customer.id_customer,
+                id_user_create=request.user.id_user
+            )
 
             # Crear categorías - CORRECCIÓN: usar getlist() para obtener todos los valores
             categories_list = request.data.getlist("categories")  # Cambio aquí

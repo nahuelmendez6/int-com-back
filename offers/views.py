@@ -120,6 +120,14 @@ class OfferDetailAPIView(APIView):
 
     def patch(self, request, pk):
         offer = self.get_object(pk)
+        
+        provider = Provider.objects.filter(user=request.user).first()
+        if not provider:
+            return Response({"detail": "El usuario no está asociado a ningún proveedor"}, status=400)
+
+        data = request.data.copy()
+        data['user_update_id'] = request.user.id_user
+
         serializer = OfferSerializer(offer, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
