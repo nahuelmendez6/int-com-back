@@ -172,7 +172,6 @@ class PetitionAPIView(APIView):
                             id_category_id=id_category
                         )
 
-        # ... resto del código igual
 
             # Actualizar adjuntos
             if "attachments" in request.FILES:

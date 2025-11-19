@@ -161,7 +161,7 @@ class PetitionSerializer(serializers.ModelSerializer):
             'id_type_provider', 'date_since', 'date_until', 'id_user_create',
             'id_user_update', 'date_create', 'date_update', 'categories',
             'attachments', 'materials', 'state_history', 'id_type_petition',
-            'id_state', 'id_type_petition', 'state_pk'
+            'id_state', 'id_type_petition', 'state_pk', 'is_deleted'
         )
 
     def validate(self, data):
