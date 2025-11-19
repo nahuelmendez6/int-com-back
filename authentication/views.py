@@ -84,7 +84,7 @@ class LoginAPIView(APIView):
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
             return Response(serializer.validated_data, status=status.HTTP_200_OK)
-        #print(serializer.errors)
+        print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # ====================================
@@ -138,5 +138,3 @@ class UserProfileUpdateView(APIView):
 
         profile_url = request.build_absolute_uri(user.profile_image.url)
         return Response({"profile_image": profile_url}, status=status.HTTP_200_OK)
-
-

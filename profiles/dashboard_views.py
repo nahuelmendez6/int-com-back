@@ -11,6 +11,7 @@ from petitions.models import Petition
 from grades.models import GradeProvider, GradeCustomer
 from notifications.models import Notification
 from chat.models import Conversation, Message
+from petitions.services import filter_petitions_for_provider
 try:
     from offers.models import Offer
 except ImportError:
@@ -69,11 +70,11 @@ class DashboardAPIView(APIView):
         avg_rating = provider_grades.aggregate(avg=Avg('rating'))['avg'] or 0
         total_reviews = provider_grades.count()
 
-        # Peticiones activas (para postular)
-        active_petitions = Petition.objects.filter(
-            is_deleted=False,
+        # Peticiones activas (para postular) que coinciden con el perfil del proveedor
+        # Se utiliza el filtro de petitions.services
+        active_petitions = filter_petitions_for_provider(provider).filter(
             date_until__gte=timezone.now().date()
-        ).count()
+        ).count() # Se añade el filtro de fecha y se cuenta
 
         # Mensajes no leídos
         unread_messages = Message.objects.filter(
@@ -190,4 +191,3 @@ class DashboardAPIView(APIView):
             },
             'recent_petitions': list(recent_petitions),
         }, status=status.HTTP_200_OK)
-

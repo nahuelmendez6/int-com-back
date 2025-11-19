@@ -101,14 +101,6 @@ class LoginSerializer(serializers.Serializer):
         if not user.is_active:
             raise serializers.ValidationError('Usuario deshabilitado.')
 
-        try:
-            # Usar 'pk' o 'id_user' (según la definición de tu modelo User)
-            user = User.objects.select_related('customer', 'provider').get(pk=user.pk)
-        except User.DoesNotExist:
-            # En un flujo normal, esto no debería ocurrir, pero es una buena práctica.
-            raise serializers.ValidationError('Error interno al cargar datos del perfil.')
-
-
         # 3. Generación de Tokens (operación estándar)
         refresh = RefreshToken.for_user(user)
 

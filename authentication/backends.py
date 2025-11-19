@@ -1,5 +1,7 @@
+import logging
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth import get_user_model
+logger = logging.getLogger(__name__)
 
 # Se obtiene el modelo de usuario activo definido en la configuración del proyecto
 UserModel = get_user_model()
@@ -35,26 +37,26 @@ class EmailBackend(ModelBackend):
 
 
         email = kwargs.get('email') or username
-        print(f"EmailBackend: Intentando autenticar al usuario con email: {email}")
+        logger.debug(f"EmailBackend: Intentando autenticar al usuario con email: {email}")
         if email is None or password is None:
-            print("EmailBackend: No se proporcionó email o contraseña.")
+            logger.warning("EmailBackend: No se proporcionó email o contraseña.")
             return None
         try:
             user = UserModel.objects.get(email=email)
-            print(f"EmailBackend: Usuario encontrado: {user}")
+            logger.debug(f"EmailBackend: Usuario encontrado: {user}")
         except UserModel.DoesNotExist:
-            print("EmailBackend: Usuario no encontrado en la base de datos.")
+            logger.info(f"EmailBackend: Usuario con email {email} no encontrado en la base de datos.")
             return None
 
-        print("EmailBackend: Verificando contraseña...")
+        logger.debug("EmailBackend: Verificando contraseña...")
         if user.check_password(password):
-            print("EmailBackend: La contraseña es correcta.")
+            logger.debug("EmailBackend: La contraseña es correcta.")
             if self.user_can_authenticate(user):
-                print("EmailBackend: El usuario puede autenticarse.")
+                logger.debug("EmailBackend: El usuario puede autenticarse.")
                 return user
             else:
-                print("EmailBackend: El usuario no puede autenticarse (is_active=False).")
+                logger.warning(f"EmailBackend: El usuario {email} no puede autenticarse (is_active=False).")
         else:
-            print("EmailBackend: La contraseña es incorrecta.")
+            logger.warning(f"EmailBackend: La contraseña para el usuario {email} es incorrecta.")
 
         return None

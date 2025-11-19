@@ -55,7 +55,7 @@ def notify_on_petition_closed(sender, instance, **kwargs):
             old_instance = Petition.objects.get(pk=instance.pk)
             
             # Verificar si la petición se está cerrando
-            if old_instance.is_active and not instance.is_active:
+            if old_instance.is_deleted and not instance.is_deleted:
                 # Notificar al customer
                 customer = Customer.objects.get(id_customer=instance.id_customer)
                 notification_service.send_notification(
