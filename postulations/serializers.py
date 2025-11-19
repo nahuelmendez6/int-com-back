@@ -5,6 +5,23 @@ from .models import (
     PostulationMaterial,
     PostulationState
 )
+from petitions.models import Petition
+
+# ==========================================
+# SERIALIZER: PetitionInfoSerializer
+# ==========================================
+class PetitionInfoSerializer(serializers.ModelSerializer):
+    """
+    Serializer de solo lectura para mostrar información básica de una petición
+    dentro de otros serializers (ej. PostulationSerializer).
+    """
+    state_name = serializers.CharField(source='id_state.name', read_only=True)
+
+    class Meta:
+        model = Petition
+        fields = ['id_petition', 'description', 'date_create', 'date_until', 'state_name']
+        read_only_fields = fields
+
 
 # ==========================================
 # SERIALIZER: PostulationBudgetSerializer
@@ -68,6 +85,7 @@ class PostulationSerializer(serializers.ModelSerializer):
     """
     budgets = PostulationBudgetSerializer(many=True, required=False)
     materials = PostulationMaterialSerializer(many=True, required=False)
+    petition = PetitionInfoSerializer(source='id_petition', read_only=True)
 
     class Meta:
         model = Postulation
@@ -85,7 +103,8 @@ class PostulationSerializer(serializers.ModelSerializer):
             'date_update',
             'budgets',
             'materials',
-            'is_deleted'
+            'is_deleted',
+            'petition'
         ]
     # -----------------------------
     # Validaciones personalizadas

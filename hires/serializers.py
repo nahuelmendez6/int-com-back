@@ -49,7 +49,8 @@ class HireSerializer(serializers.ModelSerializer):
         if cache is None:
             cache = self._petition_cache = {}
 
-        petition_id = obj.id_petition
+        # CORRECCIÓN: Usar 'id_petition_id' para obtener el ID numérico
+        petition_id = obj.id_petition_id 
         if petition_id in cache:
             return cache[petition_id]
 

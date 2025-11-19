@@ -50,8 +50,8 @@ class PostulationAPIView(APIView):
                 return Response(serializer.data, status=status.HTTP_200_OK)
 
             postulations = (
-                Postulation.objects.filter(id_provider=provider.id_provider)
-                .select_related('id_state')
+                Postulation.objects.filter(id_provider=provider.id_provider) # Se filtra por proveedor
+                .select_related('id_state', 'id_petition', 'id_petition__id_state') # Se precargan las relaciones
                 .prefetch_related(
                     Prefetch('budgets', queryset=PostulationBudget.objects.all()),
                     Prefetch(
@@ -79,8 +79,8 @@ class PostulationAPIView(APIView):
                 return Response(serializer.data, status=status.HTTP_200_OK)
 
             postulations = (
-                Postulation.objects.filter(id_petition=id_petition)
-                .select_related('id_state')
+                Postulation.objects.filter(id_petition=id_petition) # Se filtra por petición
+                .select_related('id_state', 'id_petition', 'id_petition__id_state') # Se precargan las relaciones
                 .prefetch_related(
                     Prefetch('budgets', queryset=PostulationBudget.objects.all()),
                     Prefetch(
@@ -394,4 +394,3 @@ class PostulationStatisticsAPIView(APIView):
             ],
             'recent_postulations': list(recent_postulations)
         }, status=status.HTTP_200_OK)
-

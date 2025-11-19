@@ -72,7 +72,9 @@ class HireAPIView(generics.ListAPIView):
     def list(self, request, *args, **kwargs):
         queryset = list(self.get_queryset())
 
-        petition_ids = {obj.id_petition for obj in queryset}
+        # CORRECCIÓN: Se usa 'id_petition_id' para obtener el ID numérico
+        # en lugar del objeto completo de Petition.
+        petition_ids = {obj.id_petition_id for obj in queryset} 
         provider_ids = {obj.id_provider for obj in queryset if obj.id_provider is not None}
 
         petitions = (

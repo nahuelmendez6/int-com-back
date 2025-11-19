@@ -40,7 +40,11 @@ class Postulation(models.Model):
     """
 
     id_postulation = models.AutoField(primary_key=True)
-    id_petition = models.IntegerField()
+    id_petition = models.ForeignKey(
+        Petition,
+        on_delete=models.CASCADE,
+        db_column='id_petition'
+    )
     id_provider = models.IntegerField()  # FK a n_provider (puedes crear modelo si quieres)
     winner = models.BooleanField(default=False)
     proposal = models.CharField(max_length=255, null=True, blank=True)
@@ -68,10 +72,7 @@ class Postulation(models.Model):
         - Controla que las fechas de la petición permitan postularse.
         - Impide duplicar postulaciones activas del mismo proveedor sobre la misma petición.
         """
-        try:
-            petition = Petition.objects.get(pk=self.id_petition)
-        except Petition.DoesNotExist:
-            raise ValidationError("La peticion asociada no existe.")
+        petition = self.id_petition
         
         today = timezone.now().date()
 
@@ -83,7 +84,7 @@ class Postulation(models.Model):
         
         # validacion de unicidad entre postulaciones activas
         if Postulation.objects.filter(
-            id_petition=self.id_petition,
+            id_petition=self.id_petition_id,
             id_provider=self.id_provider,
             is_deleted = False
         ).exclude(pk=self.pk).exists():
