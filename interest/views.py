@@ -58,7 +58,7 @@ class InterestAPIView(APIView):
         serializer = InterestSerializer(data=request.data)
 
         if serializer.is_valid():
-            interest = serializer.save(id_customer=customer)
+            interest = serializer.save(id_customer=customer, id_user_create=request.user.id_user)
 
             return Response(InterestSerializer(interest).data, status=status.HTTP_201_CREATED)
         
