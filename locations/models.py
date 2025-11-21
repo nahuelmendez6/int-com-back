@@ -160,6 +160,11 @@ class ProviderCity(models.Model):
         related_name='city_providers'
     )
 
+    id_user_create = models.IntegerField(null=True, blank=True)
+    id_user_update = models.IntegerField(null=True, blank=True)
+    date_create = models.DateTimeField(auto_now_add=True)
+    date_update = models.DateTimeField(auto_now=True)
+
     class Meta:
         db_table = 'n_provider_city'
         managed = False

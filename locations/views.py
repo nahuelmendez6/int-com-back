@@ -141,10 +141,11 @@ class ProviderCityViewSet(viewsets.ModelViewSet):
         """
         is_many = isinstance(request.data, list)  # chequea si es lista o dict
         serializer = self.get_serializer(data=request.data, many=is_many)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        if serializer.is_valid():
+            serializer.save(id_user_create=request.user.id_user)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['patch'], url_path='sync')
     def sync_cities(self, request, *args, **kwargs):
@@ -173,12 +174,14 @@ class ProviderCityViewSet(viewsets.ModelViewSet):
             ProviderCity.objects.filter(provider_id=provider_id, city_id__in=to_delete).delete()
 
         # Crear las nuevas
-        new_objs = [ProviderCity(provider_id=provider_id, city_id=cid) for cid in to_add]
+        new_objs = [ProviderCity(
+            provider_id=provider_id,
+            city_id=cid,
+            id_user_create=request.user.id_user
+        ) for cid in to_add]
         ProviderCity.objects.bulk_create(new_objs, ignore_conflicts=True)
 
         # Devolver estado actual
         qs = ProviderCity.objects.filter(provider_id=provider_id)
         serializer = self.get_serializer(qs, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-
