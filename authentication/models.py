@@ -74,7 +74,7 @@ class User(AbstractUser):
 
     id_user = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50)
-    lastname = models.CharField(max_length=50)
+    lastname = models.CharField(max_length=50, null=True, blank=True)
     email = models.EmailField(max_length=100, unique=True)
     #password = models.CharField(max_length=255)
     enabled = models.BooleanField(default=True)
