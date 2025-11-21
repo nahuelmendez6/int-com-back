@@ -10,7 +10,13 @@ class AvailabilitySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Availability
-        fields = '__all__'
+        fields = '__all__' 
+        read_only_fields = ('id_user_create', 'id_user_update')
+
+    def create(self, validated_data):
+        validated_data['id_user_create'] = self.context['request'].user.id_user
+        return super().create(validated_data)
+
 
     def validate(self, data):
          # Si es PATCH, usar los valores actuales si no vienen

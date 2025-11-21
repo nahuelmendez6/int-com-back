@@ -34,6 +34,10 @@ class Availability(models.Model):
     day_of_week = models.IntegerField()
     start_time = models.TimeField()
     end_time = models.TimeField()
+    id_user_create = models.IntegerField(null=True, blank=True)
+    id_user_update = models.IntegerField(null=True, blank=True)
+    date_create = models.DateTimeField(auto_now_add=True)
+    date_update = models.DateTimeField(auto_now=True)
 
 
     class Meta:

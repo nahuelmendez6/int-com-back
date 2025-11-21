@@ -17,10 +17,10 @@ class AvaialabilityAPIView(APIView):
         """
         Crea una disponibilidad
         """
-        serializer = AvailabilitySerializer(data=request.data)
+        serializer = AvailabilitySerializer(data=request.data, context={'request': request})
 
         if serializer.is_valid():
-            availability = serializer.save()
+            availability = serializer.save(id_user_create=request.user.id_user)
             #  devolvemos los datos serializados en JSON
             output_serializer = AvailabilitySerializer(availability)
             return Response(output_serializer.data, status=status.HTTP_201_CREATED)
@@ -34,7 +34,8 @@ class AvaialabilityAPIView(APIView):
         Devuelve la disponibilidad del provider(id_provider)
         """
         availabilitites = Availability.objects.filter(id_provider=id_provider)
-        serializer = AvailabilitySerializer(availabilitites, many=True)
+        serializer = AvailabilitySerializer(availabilitites, many=True, context={'request': request})
+
         
         return Response(
             serializer.data,
@@ -47,10 +48,12 @@ class AvaialabilityAPIView(APIView):
         actualiza disponibilidades
         """
         availability = get_object_or_404(Availability, pk=pk)
-        serializer = AvailabilitySerializer(availability,data=request.data, partial=True)
+        
+        serializer = AvailabilitySerializer(availability, data=request.data, partial=True, context={'request': request})
+
 
         if serializer.is_valid():
-            availability = serializer.save()
+            availability = serializer.save(id_user_update=request.user.id_user)
             return Response(AvailabilitySerializer(availability).data, status=status.HTTP_200_OK)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
