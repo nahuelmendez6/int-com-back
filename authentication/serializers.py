@@ -104,7 +104,7 @@ class LoginSerializer(serializers.Serializer):
         # 3. Generación de Tokens (operación estándar)
         refresh = RefreshToken.for_user(user)
 
-        # 4. Determinación de Rol (ahora eficiente, sin consultas extra)
+        # 4. Determinación de Rol 
         role = None
         if hasattr(user, 'customer'): # El acceso es directo al objeto ya cargado
             role = 'customer'
