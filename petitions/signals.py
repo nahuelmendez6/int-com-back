@@ -2,6 +2,7 @@ from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from notifications.services import notification_service
 from .models import Petition
+from .services import filter_providers_for_petition
 from authentication.models import Customer, Provider
 
 
@@ -19,12 +20,10 @@ def notify_on_petition_created(sender, instance, created, **kwargs):
     """
     if created:
         print(f"✅ SIGNAL: 'notify_on_petition_created' disparado para la petición: '{instance.description}'")
-        # Obtener todos los proveedores que podrían estar interesados
-        # Por ahora, notificamos a todos los proveedores activos
-        providers = Provider.objects.filter(is_active=True)
-        providers = Provider.objects.filter(user__is_active=True)
+        # Obtener solo los proveedores que coinciden con el perfil de la petición
+        providers = filter_providers_for_petition(instance)
         
-        print(f"ℹ️ SIGNAL: Se notificarán a {len(providers)} proveedores.")
+        print(f"ℹ️ SIGNAL: Se notificarán a {providers.count()} proveedores.")
         for provider in providers:
             notification_service.send_notification(
                 user_id=provider.user.id_user,
@@ -85,7 +84,7 @@ def notify_on_petition_closed(sender, instance, **kwargs):
                         title="Petición cerrada",
                         message=f"La petición '{instance.title}' en la que postulaste ha sido cerrada.",
                         notification_type='petition_closed',
-                        related_petition_id=instance.id_petition,
+                        related_petition_id=instance.id_petition, # ID
                         related_postulation_id=postulation.id_postulation,
                         metadata={
                             'petition_id': instance.id_petition,

@@ -25,7 +25,7 @@ def notify_on_postulation_create(sender, instance, created, **kwargs):
     """
     if created:
         try:
-            petition = Petition.objects.get(pk=instance.id_petition)
+            petition = Petition.objects.get(pk=instance.id_petition_id)
             id_customer = petition.id_customer
             customer = Customer.objects.get(id_customer=id_customer)
             
@@ -35,12 +35,12 @@ def notify_on_postulation_create(sender, instance, created, **kwargs):
                 title="Nueva postulación recibida",
                 message=f"Tu petición '{petition.description}' recibió una nueva postulación.",
                 notification_type='postulation_created',
-                related_postulation_id=instance.id_postulation,
-                related_petition_id=instance.id_petition,
+                related_postulation_id=instance.id_postulation, # Asumiendo que Notification espera un ID
+                related_petition_id=instance.id_petition_id, # Usar el ID, no el objeto
                 metadata={
-                    'postulation_id': instance.id_postulation,
-                    'petition_id': instance.id_petition,
-                    'provider_id': instance.id_provider
+                    'postulation_id': instance.id_postulation, # ID
+                    'petition_id': instance.id_petition_id, # ID
+                    'provider_id': instance.id_provider # ID
                 }
             )
         except (Petition.DoesNotExist, Customer.DoesNotExist):
@@ -76,7 +76,7 @@ def notify_on_state_change(sender, instance, **kwargs):
         # El estado cambió
         try:
             provider = Provider.objects.get(id_provider=instance.id_provider)
-            petition = Petition.objects.get(pk=instance.id_petition)
+            petition = Petition.objects.get(pk=instance.id_petition_id)
             
             # Determinar el tipo de notificación según el nuevo estado
             notification_type = 'postulation_state_changed'
@@ -98,11 +98,11 @@ def notify_on_state_change(sender, instance, **kwargs):
                 title=title,
                 message=message,
                 notification_type=notification_type,
-                related_postulation_id=instance.id_postulation,
-                related_petition_id=instance.id_petition,
+                related_postulation_id=instance.id_postulation, # ID
+                related_petition_id=instance.id_petition_id, # Usar el ID
                 metadata={
-                    'postulation_id': instance.id_postulation,
-                    'petition_id': instance.id_petition,
+                    'postulation_id': instance.id_postulation, # ID
+                    'petition_id': instance.id_petition_id, # ID
                     'old_state': str(old_instance.id_state),
                     'new_state': str(instance.id_state)
                 }
@@ -130,18 +130,18 @@ def notify_on_postulation_winner(sender, instance, **kwargs):
     if instance.winner and not getattr(instance, '_winner_notified', False):
         try:
             provider = Provider.objects.get(id_provider=instance.id_provider)
-            petition = Petition.objects.get(pk=instance.id_petition)
+            petition = Petition.objects.get(pk=instance.id_petition_id)
             
             notification_service.send_notification(
                 user_id=provider.id_user,
                 title="¡Felicidades! Has sido seleccionado",
                 message=f"Tu postulación para '{petition.description}' ha sido seleccionada como ganadora.",
                 notification_type='postulation_accepted',
-                related_postulation_id=instance.id_postulation,
-                related_petition_id=instance.id_petition,
+                related_postulation_id=instance.id_postulation, # ID
+                related_petition_id=instance.id_petition_id, # Usar el ID
                 metadata={
-                    'postulation_id': instance.id_postulation,
-                    'petition_id': instance.id_petition,
+                    'postulation_id': instance.id_postulation, # ID
+                    'petition_id': instance.id_petition_id, # ID
                     'is_winner': True
                 }
             )

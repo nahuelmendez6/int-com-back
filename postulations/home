@@ -83,8 +83,8 @@ class PostulationSerializer(serializers.ModelSerializer):
     Gestiona la creación, validación y actualización de postulaciones,
     incluyendo sus presupuestos y materiales asociados.
     """
-    budgets = PostulationBudgetSerializer(many=True, required=False, allow_null=True)
-    materials = PostulationMaterialSerializer(many=True, required=False, allow_null=True)
+    budgets = PostulationBudgetSerializer(many=True, required=False, read_only=True)
+    materials = PostulationMaterialSerializer(many=True, required=False, read_only=True)
     petition = PetitionInfoSerializer(source='id_petition', read_only=True)
 
     class Meta:
@@ -188,21 +188,3 @@ class PostulationSerializer(serializers.ModelSerializer):
                 PostulationMaterial.objects.create(id_postulation=instance, **material)
 
         return instance
-
-
-
-
-# ===========================================
-# SERIALIZER: PostulationReadSerializer
-# ===========================================
-class PostulationReadSerializer(serializers.ModelSerializer):
-    """
-    Serializer de solo lectura para listar o recuperar postulaciones.
-    Incluye presupuestos y materiales en formato anidado.
-    """
-    budgets = PostulationBudgetSerializer(many=True, read_only=True)
-    materials = PostulationMaterialSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Postulation
-        fields = '__all__'

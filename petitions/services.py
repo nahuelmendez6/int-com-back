@@ -109,3 +109,47 @@ def filter_petitions_for_provider(provider):
         ).values('id_customer')
         qs = qs.filter(id_customer__in=Subquery(customer_ids))
     return qs.distinct()
+
+
+# ====================================================
+# FUNCIÓN: filter_providers_for_petition
+# ====================================================
+def filter_providers_for_petition(petition):
+    """
+    Filtra los proveedores que deben ser notificados sobre una nueva petición.
+
+    Criterios de filtrado (inversos a `filter_petitions_for_provider`):
+    1. Proveedores activos.
+    2. Coincidencia de profesión: si la petición requiere una, el proveedor debe tenerla.
+    3. Coincidencia de tipo de proveedor: si la petición requiere uno, el proveedor debe coincidir.
+    4. Coincidencia de categorías: si la petición tiene categorías, el proveedor debe tener al menos una.
+    5. Coincidencia geográfica: el cliente de la petición debe estar en una de las ciudades del proveedor.
+    """
+    providers = Provider.objects.filter(user__is_active=True)
+
+    # 1. Filtrar por profesión
+    if petition.id_profession:
+        providers = providers.filter(profession=petition.id_profession)
+
+    # 2. Filtrar por tipo de proveedor
+    if petition.id_type_provider:
+        providers = providers.filter(type_provider=petition.id_type_provider)
+
+    # 3. Filtrar por categorías
+    petition_categories = petition.categories.all()
+    if petition_categories.exists():
+        providers = providers.filter(categories__in=petition_categories)
+
+    # 4. Filtrar por zona geográfica
+    try:
+        customer = Customer.objects.get(id_customer=petition.id_customer)
+        if customer.address and customer.address.city:
+            customer_city = customer.address.city
+            # Filtra proveedores que tienen la ciudad del cliente en sus zonas de trabajo
+            providers = providers.filter(cities=customer_city)
+    except Customer.DoesNotExist:
+        # Si el cliente no existe, no se puede filtrar por ubicación,
+        # se devuelve un queryset vacío para no notificar a nadie.
+        return Provider.objects.none()
+
+    return providers.distinct().select_related('user')
