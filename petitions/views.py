@@ -151,7 +151,7 @@ class PetitionAPIView(APIView):
         petition = get_object_or_404(Petition, pk=pk)
         serializer = PetitionSerializer(petition, data=request.data, partial=True)
         if serializer.is_valid():
-            petition = serializer.save()
+            petition = serializer.save(id_user_update=request.user.id_user)
 
             # Actualizar categorías - CORRECCIÓN: usar getlist()
             if "categories" in request.data:
