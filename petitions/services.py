@@ -12,13 +12,17 @@ def get_petition_list_queryset():
     """
     return (
         Petition.objects.select_related(
+            # Relaciones 1-a-1 o muchos-a-1 que se pueden resolver con JOIN
+            # y son eficientes para usar en listados.
             "id_type_petition",
             "id_state",
             "id_profession",
             "id_type_provider",
         )
         .prefetch_related(
-            Prefetch(
+            # Prefetch para relaciones de tipo many-to-many o reversas,
+            # que requieren una consulta adicional pero mejoran el rendimiento.
+            Prefetch(# Precargamos la categoría asociada para evitar consultas extras.
                 "petitioncategory_set",
                 queryset=PetitionCategory.objects.select_related("id_category"),
             ),
@@ -108,7 +112,19 @@ def filter_petitions_for_provider(provider):
             address__city__in=provider.cities.all()
         ).values('id_customer')
         qs = qs.filter(id_customer__in=Subquery(customer_ids))
-    return qs.distinct()
+    return qs.distinct() # aca recien se ejecuta la consulta
+
+    """
+    SELECT DISTINCT *
+    FROM petition
+
+    WHERE
+        (id_profession = :provider_profession OR id_profession IS NULL)
+    AND (id_type_provider = :provider_type OR id_type_provider IS NULL)
+    AND (petition.category_id IN (...categorías del provider...))
+    AND (id_customer IN (SELECT id_customer FROM customers WHERE city_id IN (...)))
+
+    """
 
 
 # ====================================================

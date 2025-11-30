@@ -82,7 +82,6 @@ class LoginSerializer(serializers.Serializer):
 
     """
     Serializer encargado de manejar la autenticación de usuarios.
-    Optimizado para cargar relaciones de perfil eficientemente.
     """
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)

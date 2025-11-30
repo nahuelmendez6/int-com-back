@@ -22,9 +22,15 @@ class GradeProviderAPIView(APIView):
         Opcionalmente filtrar por proveedor: ?provider=<id>
         """
         provider_id = request.query_params.get('provider')
+        customer_id = request.query_params.get('customer')
+
         queryset = GradeProvider.objects.filter(is_visible=True)
         if provider_id:
             queryset = queryset.filter(provider_id=provider_id)
+
+        if customer_id:
+            queryset = queryset.filter(customer_id=customer_id)
+        
         queryset = queryset.order_by('-date_create')
         serializer = GradeProviderSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
