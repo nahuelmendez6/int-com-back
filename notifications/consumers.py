@@ -3,6 +3,29 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.contrib.auth import get_user_model
 
+"""
+NotificacionConsumer "escucha" los eventos de notificaciones y los envía al cliente
+a través de WebSockets en tiempo real.
+
+
+Es el componente que maneja el WebSocket de cada usuario.
+Permite comunicación en tiempo real entre el backend y el navegador.
+
+Responsabilidades principales:
+
+Conectar un usuario a un canal WebSocket.
+
+Unirse al grupo notifications_<user_id>.
+
+Enviar eventos al frontend (creada, actualizada, eliminada).
+
+Recibir acciones del usuario (marcar como leída, solicitar contador).
+
+Consultar/actualizar la base de datos desde un entorno async.
+
+Es el “puente” entre el usuario y los eventos.
+"""
+
 
 class NotificationConsumer(AsyncWebsocketConsumer):
     """
@@ -87,7 +110,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         """
         Envía al cliente una notificación recién creada.
         """
-        print(f"📡 CONSUMER: Recibido evento 'notification_created' para el grupo '{self.user_group_name}'. Enviando al cliente.")
+        print(f"CONSUMER: Recibido evento 'notification_created' para el grupo '{self.user_group_name}'. Enviando al cliente.")
         await self.send(text_data=json.dumps({
             'type': 'notification_created',
             'notification': event['notification'],

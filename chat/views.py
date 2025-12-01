@@ -41,25 +41,25 @@ class ConversationViewSet(viewsets.ViewSet):
         """
         conversations = (
             Conversation.objects.filter(participants=request.user)
-            .prefetch_related(
+            .prefetch_related( #Optimiza relaciones reversas / muchos-a-muchos (hace varias consultas y une en memoria).
                 Prefetch(
                     "participants",
                     queryset=User.objects.only("id_user", "email", "name", "lastname"),
                 ),
                 Prefetch(
                     "messages",
-                    queryset=Message.objects.select_related("sender")
+                    queryset=Message.objects.select_related("sender") # JOIN en SQL para ForeignKey directos.
                     .order_by("-created_at")[:1],
                     to_attr="prefetched_last_message",
                 ),
             )
-            .annotate(
+            .annotate(  # Agrega campos calculados (agregaciones: count, sum, etc.).
                 unread_total=Count(
                     "messages",
                     filter=Q(messages__read=False) & ~Q(messages__sender=request.user),
                 )
             )
-            .distinct()
+            .distinct()     # Evita registros duplicados tras JOINs.
         )
         serializer = ConversationSerializer(conversations, many=True, context={'request': request})
         return Response(serializer.data)

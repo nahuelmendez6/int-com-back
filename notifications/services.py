@@ -6,6 +6,11 @@ from django.contrib.auth import get_user_model
 from .models import Notification, NotificationSettings
 from .serializers import NotificationSerializer
 
+"""
+Es la clase encargada de crear, actualizar, 
+eliminar notificaciones y enviarlas en tiempo real al WebSocket.
+
+"""
 
 
 # ====================================================
@@ -39,7 +44,7 @@ class NotificationService:
             
             # Verificar si el usuario tiene habilitado este tipo de notificación
             is_enabled = self._is_notification_enabled(settings, notification_type)
-            print(f"⚙️ SERVICE: Verificando para user '{user.username}', tipo '{notification_type}'. Habilitado: {is_enabled}")
+            print(f"SERVICE: Verificando para user '{user.username}', tipo '{notification_type}'. Habilitado: {is_enabled}")
 
             if not is_enabled:
                 return None
@@ -55,10 +60,10 @@ class NotificationService:
                 metadata=metadata or {}
             )
             
-            print(f"✅ SERVICE: Notificación '{notification.id}' creada en la DB para el usuario '{user.username}'.")
+            print(f"SERVICE: Notificación '{notification.id}' creada en la DB para el usuario '{user.username}'.")
             # Enviar por WebSocket si está habilitado
             if settings.push_notifications:
-                print(f"🚀 SERVICE: Enviando notificación por WebSocket (push_notifications: {settings.push_notifications})")
+                print(f"SERVICE: Enviando notificación por WebSocket (push_notifications: {settings.push_notifications})")
                 self._send_websocket_notification(user_id, notification)
             
             return notification

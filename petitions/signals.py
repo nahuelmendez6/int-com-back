@@ -1,4 +1,12 @@
 from django.db.models.signals import post_save, pre_save
+"""
+post_save → se dispara después de guardar un objeto.
+
+pre_save → se dispara antes de guardar un objeto.
+
+post_delete → se dispara cuando se borra un objeto.
+
+"""
 from django.dispatch import receiver
 from notifications.services import notification_service
 from .models import Petition
@@ -10,6 +18,9 @@ from authentication.models import Customer, Provider
 # ====================================================
 # SIGNAL: notify_on_petition_created
 # ====================================================
+"""
+Django detecta automáticamente que se creó (o actualizó) un registro y llama a tu función
+"""
 @receiver(post_save, sender=Petition)
 def notify_on_petition_created(sender, instance, created, **kwargs):
     """
@@ -19,11 +30,11 @@ def notify_on_petition_created(sender, instance, created, **kwargs):
     Solo se ejecuta si la petición es recién creada (created=True).
     """
     if created:
-        print(f"✅ SIGNAL: 'notify_on_petition_created' disparado para la petición: '{instance.description}'")
+        print(f"SIGNAL: 'notify_on_petition_created' disparado para la petición: '{instance.description}'")
         # Obtener solo los proveedores que coinciden con el perfil de la petición
         providers = filter_providers_for_petition(instance)
         
-        print(f"ℹ️ SIGNAL: Se notificarán a {providers.count()} proveedores.")
+        print(f"SIGNAL: Se notificarán a {providers.count()} proveedores.")
         for provider in providers:
             notification_service.send_notification(
                 user_id=provider.user.id_user,
